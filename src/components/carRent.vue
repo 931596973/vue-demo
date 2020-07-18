@@ -87,6 +87,9 @@ export default {
     return {
       formType: 0,
       form: {},
+      rules: [],
+      value:'',
+      options: [],
       orderForm: {},
       orderRules: [],
       tableData: [],
@@ -103,7 +106,9 @@ export default {
     handleDel() {},
     handleRowEdit(value) {},
     handleRowDel(value) {},
-    addRentOrder() {}
+    addRentOrder() {},
+    handleSelectionChange(){},
+    selectRow(){}
   }
 }
 </script>
