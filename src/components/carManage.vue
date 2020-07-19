@@ -123,25 +123,20 @@ export default {
       rules: {
         typeId: [
           { required: true, message: '请输入车辆类型编码', trigger: 'blur' },
-          { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
         ],
         typeName: [
           { required: true, message: '请输入车辆类型名称', trigger: 'blur' },
-          { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
         ]
       },
       carRules: {
         id: [
           { required: true, message: '请输入车辆编码', trigger: 'blur' },
-          { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
         ],
         name: [
           { required: true, message: '请输入车辆名称', trigger: 'blur' },
-          { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
         ],
         carNumber: [
           { required: true, message: '请输入车牌号', trigger: 'blur' },
-          { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
         ],
         buyDate: [
           { required: true, message: '请选择购买日期', trigger: 'blur' }

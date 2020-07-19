@@ -3,7 +3,7 @@
     <div class="btn-wrap">
       <el-button type="primary" size="small" @click="handleQuery">查询</el-button>
       <el-button type="primary" size="small" @click="handleAdd">新建</el-button>
-      <el-button type="primary" size="small" @click="handleDel">删除</el-button>
+      <el-button type="primary" size="small" @click="handleDel" :disabled="delDisabled">删除</el-button>
     </div>
     <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%"
       @selection-change="handleSelectionChange" @select="selectRow">
@@ -32,45 +32,57 @@
         </template>
       </el-table-column>
     </el-table>
-
+    <el-pagination class="pagination" @size-change="handleSizeChange" @current-change="handleCurrentChange"
+      :current-page="1" :page-sizes="[5, 10, 20, 30, 50]" :page-size="5"
+      layout="total, sizes, prev, pager, next, jumper" :total="total">
+    </el-pagination>
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible">
       <el-form :model="form" :rules="rules" ref="form" v-if="formType === 0">
         <el-form-item label="订单编号" :label-width="formLabelWidth" prop="typeId">
           <el-input v-model="form.id" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
         </el-form-item>
-
-        <el-form-item label="上级类型" :label-width="formLabelWidth">
-          <treeselect v-model="value" :multiple="true" :options="options" />
+        <el-form-item label="车辆" :label-width="formLabelWidth">
+          <el-select v-model="value" placeholder="请选择车辆">
+            <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+            </el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <el-form :model="orderForm" :rules="orderRules" v-if="formType === 1">
         <el-form-item label="订单编号" :label-width="formLabelWidth" prop="id">
-          <el-input v-model="orderForm.id" autocomplete="off"></el-input>
+          <el-input v-model="orderForm.orderNo" autocomplete="off" readonly></el-input>
         </el-form-item>
         <el-form-item label="制单人" :label-width="formLabelWidth" prop="name">
-          <el-input v-model="orderForm.name" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
+          <el-input v-model="orderForm.name" autocomplete="off" placeholder="请输入制单人"></el-input>
         </el-form-item>
         <el-form-item label="出租日期" :label-width="formLabelWidth" prop="buyDate">
-          <el-date-picker v-model="orderForm.buyDate" type="date" placeholder="请选择购买日期时间">
+          <el-date-picker v-model="orderForm.rentDate" type="date" placeholder="请选择出租日期时间" value-format="yyyy-MM-dd"
+            @change="handleDateChange">
           </el-date-picker>
         </el-form-item>
         <el-form-item label="租赁单位" :label-width="formLabelWidth" prop="price">
-          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入车辆价格"></el-input>
+          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入租赁单位"></el-input>
         </el-form-item>
         <el-form-item label="承建人" :label-width="formLabelWidth" prop="price">
-          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入车辆价格"></el-input>
+          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入承建人"></el-input>
         </el-form-item>
         <el-form-item label="租金" :label-width="formLabelWidth" prop="price">
-          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入车辆价格"></el-input>
+          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入租金"></el-input>
         </el-form-item>
         <el-form-item label="出租时长（月）" :label-width="formLabelWidth" prop="price">
-          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入车辆价格"></el-input>
+          <el-select v-model="value" placeholder="请选择出租时长">
+            <el-option v-for="item in rentTimes" :key="item.value" :label="item.label" :value="item.value">
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="车辆" :label-width="formLabelWidth" prop="price">
-          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入车辆价格"></el-input>
+          <el-select v-model="value" placeholder="请选择车辆">
+            <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="备注" :label-width="formLabelWidth" prop="price">
-          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入车辆价格"></el-input>
+          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入备注"></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -83,35 +95,97 @@
 
 <script>
 export default {
+  computed: {
+    total() {
+      return this.tableData.length
+    }
+  },
+  created() {
+    this.$axios.get('http://localhost:8080/mock/news').then(res => {
+      console.log(res.data)
+      this.tableData = res.data
+    })
+  },
   data() {
     return {
+      delDisabled: true,
       formType: 0,
       form: {},
-      rules: [],
-      value:'',
+      rules: {},
+      value: '',
       options: [],
-      orderForm: {},
-      orderRules: [],
+      orderForm: {
+        orderNo: '',
+        rentDate: new Date()
+      },
+      orderRules: {},
       tableData: [],
       dialogTitle: '查询',
       dialogVisible: false,
-      formLabelWidth: '120px'
+      formLabelWidth: '120px',
+      rentTimes: [
+        { label: '1月', value: 1 },
+        { label: '2月', value: 2 },
+        { label: '3月', value: 3 }
+      ]
     }
   },
   methods: {
+    handleDateChange(value) {
+      console.log('date', value)
+      this.orderForm.orderNo = this.getOrderNo(value)
+      console.log('datess', this.getOrderNo(value))
+    },
     handleQuery() {
       this.dialogVisible = true
     },
-    handleAdd() {},
-    handleDel() {},
+    handleAdd() {
+      this.dialogVisible = true
+      this.dialogTitle = '车辆租赁单新建'
+      this.formType = 1
+      this.orderForm.orderNo = this.getOrderNo(this.orderForm.rentDate)
+    },
+    handleDel() {
+      this.$confirm('确认删除?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+        center: true
+      })
+        .then(() => {
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+        })
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消'
+          })
+        })
+    },
     handleRowEdit(value) {},
     handleRowDel(value) {},
     addRentOrder() {},
-    handleSelectionChange(){},
-    selectRow(){}
+    handleSelectionChange() {},
+    selectRow(section, row) {
+      if (section.length > 0) this.delDisabled = false
+    },
+    handleSizeChange() {},
+    handleCurrentChange() {},
+    getOrderNo(value) {
+      let result = ''
+      let flowNo = Math.floor(Math.random() * 1000)
+      result = 'ZLD' + value.replace(/-/g, '') + flowNo
+      return result
+    }
   }
 }
 </script>
 
 <style scoped>
+.pagination {
+  float: right;
+}
 </style>
