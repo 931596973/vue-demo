@@ -2,20 +2,21 @@
   <div>
     <el-container>
       <el-aside class="left" style="border: 1px sold #cccccc">
-        <car-type></car-type>
+        <el-tree :props="props" :load="loadNode" lazy @node-click="handleNodeClick">
+        </el-tree>
       </el-aside>
       <el-main>
         <h3>车辆管理</h3>
         <div class="btn-wrap">
           <el-button type="primary" size="small" @click="handleAddCarType">新增车辆类型</el-button>
-          <el-button type="primary" size="small" :disabled="editCarTypeDisable">修改车辆类型</el-button>
-          <el-button type="primary" size="small" >删除车辆类型</el-button>
+          <el-button type="primary" size="small" :disabled="editCarTypeDisable" @click="handleUpdateCarType">修改车辆类型
+          </el-button>
+          <el-button type="primary" size="small" @click="handleDeleteCarType">删除车辆类型</el-button>
           <el-button type="primary" size="small" @click="addCar">新增车辆</el-button>
           <el-button type="primary" size="small" :disabled="editCarDisable">修改车辆</el-button>
           <el-button type="primary" size="small" :disabled="delCarDisable" @click="delCar">删除车辆</el-button>
         </div>
-        <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%"
-          @selection-change="handleSelectionChange" @select="selectRow">
+        <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @select="selectRow">
           <el-table-column type="selection" width="55">
           </el-table-column>
           <el-table-column prop="id" label="车辆编码" width="120">
@@ -47,14 +48,14 @@
 
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible">
       <el-form :model="form" :rules="rules" ref="form" v-if="formType === 0">
-        <el-form-item label="类型编码" :label-width="formLabelWidth" prop="typeId">
-          <el-input v-model="form.id" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
+        <el-form-item label="类型编码" :label-width="formLabelWidth" prop="carTypeId">
+          <el-input v-model="form.carTypeId" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
         </el-form-item>
-        <el-form-item label="类型名称" :label-width="formLabelWidth" prop="typeName">
-          <el-input v-model="form.id" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
+        <el-form-item label="类型名称" :label-width="formLabelWidth" prop="carTypeName">
+          <el-input v-model="form.carTypeName" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
         </el-form-item>
         <el-form-item label="上级类型" :label-width="formLabelWidth">
-          <treeselect v-model="value" :multiple="true" :options="options" />
+          <treeselect v-model="form.carTypeParent" :options="options" :load-options="loadOptions" />
         </el-form-item>
       </el-form>
       <el-form :model="carForm" :rules="carRules" ref="form" v-if="formType === 1">
@@ -86,20 +87,25 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addCarType">确 定</el-button>
+        <el-button type="primary" @click="confirmDialog">确 定</el-button>
       </span>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import carType from './carType'
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
+import {
+  getCarType,
+  updateCarType,
+  addCarType,
+  deleteCaarType
+} from '../api.js'
 
 export default {
   components: {
-    carType,
     Treeselect
   },
   computed: {
@@ -108,35 +114,33 @@ export default {
     }
   },
   created() {
-    this.$axios.get('http://localhost:8080/mock/news').then(res => {
-      console.log(res.data)
-      this.tableData = res.data
-    })
+    this.init()
   },
   data() {
     return {
+      props: {
+        label: 'carTypeName',
+        children: 'zones',
+        isLeaf: 'leaf'
+      },
       radio: '未租赁',
       editCarDisable: true,
       editCarTypeDisable: true,
       delCarDisable: true,
       formType: 0,
       rules: {
-        typeId: [
-          { required: true, message: '请输入车辆类型编码', trigger: 'blur' },
+        carTypeId: [
+          { required: true, message: '请输入车辆类型编码', trigger: 'blur' }
         ],
-        typeName: [
-          { required: true, message: '请输入车辆类型名称', trigger: 'blur' },
+        carTypeName: [
+          { required: true, message: '请输入车辆类型名称', trigger: 'blur' }
         ]
       },
       carRules: {
-        id: [
-          { required: true, message: '请输入车辆编码', trigger: 'blur' },
-        ],
-        name: [
-          { required: true, message: '请输入车辆名称', trigger: 'blur' },
-        ],
+        id: [{ required: true, message: '请输入车辆编码', trigger: 'blur' }],
+        name: [{ required: true, message: '请输入车辆名称', trigger: 'blur' }],
         carNumber: [
-          { required: true, message: '请输入车牌号', trigger: 'blur' },
+          { required: true, message: '请输入车牌号', trigger: 'blur' }
         ],
         buyDate: [
           { required: true, message: '请选择购买日期', trigger: 'blur' }
@@ -150,26 +154,9 @@ export default {
       // define options
       options: [
         {
-          id: 'a',
-          label: 'a',
-          children: [
-            {
-              id: 'aa',
-              label: 'aa'
-            },
-            {
-              id: 'ab',
-              label: 'ab'
-            }
-          ]
-        },
-        {
-          id: 'b',
-          label: 'b'
-        },
-        {
-          id: 'c',
-          label: 'c'
+          id: '00000000-0000-0000-0000-000000000000',
+          label: '00 车辆品牌',
+          children: null
         }
       ],
       formLabelWidth: '120px',
@@ -178,12 +165,26 @@ export default {
       tableData: [],
       dialogTitle: '新增车辆类型',
       dialogVisible: false,
-      multipleSelection: []
+      carTypeObj: {
+        id: '',
+        carTypeCode: '',
+        carTypeName: '',
+        carTypeParent: ''
+      }
     }
   },
   methods: {
-    handleSelectionChange(val) {
-      this.multipleSelection = val
+    init() {
+      getCarType(
+        '00000000-0000-0000-0000-000000000000',
+        '车辆类型',
+        '00'
+      ).then(res => {
+        if (res.data.status === 200) {
+          const { data } = res.data
+          console.log(data)
+        }
+      })
     },
     addCar() {
       this.dialogVisible = true
@@ -228,15 +229,31 @@ export default {
       this.dialogTitle = '新增车辆类型'
       this.formType = 0
     },
-
     addCarType() {
-      // this.dialogVisible = false
+      this.form.id = ''
+      this.form.carTypeCode = this.form.carTypeId
+      addCarType(this.form).then(res => {
+        if (res.data.status === 200) {
+          this.$message({
+            type: 'success',
+            message: '添加成功'
+          })
+          this.dialogVisible = false
+        } else {
+          this.$message({
+            type: 'error',
+            message: '添加失败'
+          })
+        }
+      })
+    },
+    confirmDialog() {
+      // 车辆类型
       if (this.formType === 0) {
         this.$refs.form.validate(valid => {
           if (valid) {
-            alert('submit!')
+            this.addCarType()
           } else {
-            console.log('error submit!!')
             return false
           }
         })
@@ -258,7 +275,93 @@ export default {
         : (this.editCarDisable = true)
       this.delCarDisable = false
     },
-    delCar() {}
+    delCar() {},
+    handleNodeClick(data) {
+      this.carTypeObj.carTypeName = data.carTypeName
+      this.carTypeObj.carTypeCode = data.carTypeCode
+      this.carTypeObj.carTypeParent = data.carTypeParent
+    },
+    handleUpdateCarType() {
+      updateCarType().then(res => {})
+    },
+    handleDeleteCarType() {
+
+    },
+    loadOptions({ action, parentNode, callback }) {
+      console.log('action', action)
+      console.log('parentNode', parentNode)
+      console.log('callback', callback)
+      // Typically, do the AJAX stuff here.
+      // Once the server has responded,
+      // assign children options to the parent node & call the callback.
+      if (action === LOAD_CHILDREN_OPTIONS) {
+        switch (parentNode.id) {
+          case 'success': {
+            simulateAsyncOperation(() => {
+              parentNode.children = [
+                {
+                  id: 'child',
+                  label: 'Child option'
+                }
+              ]
+              callback()
+            })
+            break
+          }
+          case 'no-children': {
+            simulateAsyncOperation(() => {
+              parentNode.children = []
+              callback()
+            })
+            break
+          }
+          case 'failure': {
+            simulateAsyncOperation(() => {
+              callback(new Error('Failed to load options: network error.'))
+            })
+            break
+          }
+          default: /* empty */
+        }
+      }
+    },
+    loadNode(node, resolve) {
+      const { data } = node
+      console.log(node)
+      if (node.level === 0) {
+        return resolve([
+          {
+            carTypeName: '00 车辆品牌',
+            carTypeCode: '111',
+            carTypeParent: '00000000-0000-0000-0000-000000000000'
+          }
+        ])
+      }
+      if (node.level > 0) {
+        getCarType(
+          data.carTypeParent,
+          data.carTypeName,
+          data.carTypeCode
+        ).then(res => {
+          console.log(res)
+          return resolve([])
+        })
+      }
+
+      // setTimeout(() => {
+      //   const data = [
+      //     {
+      //       name: 'leaf',
+      //       leaf: true
+      //     },
+      //     {
+      //       name: 'zone'
+      //     }
+      //   ]
+
+      //   resolve(data)
+      // }, 500)
+    }
   }
 }
 </script>

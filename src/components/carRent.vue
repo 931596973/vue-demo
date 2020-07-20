@@ -43,46 +43,46 @@
         </el-form-item>
         <el-form-item label="车辆" :label-width="formLabelWidth">
           <el-select v-model="value" placeholder="请选择车辆">
-            <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+            <el-option v-for="item in cars" :key="item.value" :label="item.label" :value="item.value">
             </el-option>
           </el-select>
         </el-form-item>
       </el-form>
-      <el-form :model="orderForm" :rules="orderRules" v-if="formType === 1">
-        <el-form-item label="订单编号" :label-width="formLabelWidth" prop="id">
+      <el-form :model="orderForm" ref="orderForm" :rules="orderRules" v-if="formType === 1">
+        <el-form-item label="订单编号" :label-width="formLabelWidth" prop="orderNo">
           <el-input v-model="orderForm.orderNo" autocomplete="off" readonly></el-input>
         </el-form-item>
         <el-form-item label="制单人" :label-width="formLabelWidth" prop="name">
           <el-input v-model="orderForm.name" autocomplete="off" placeholder="请输入制单人"></el-input>
         </el-form-item>
-        <el-form-item label="出租日期" :label-width="formLabelWidth" prop="buyDate">
+        <el-form-item label="出租日期" :label-width="formLabelWidth" prop="rentDate">
           <el-date-picker v-model="orderForm.rentDate" type="date" placeholder="请选择出租日期时间" value-format="yyyy-MM-dd"
             @change="handleDateChange">
           </el-date-picker>
         </el-form-item>
-        <el-form-item label="租赁单位" :label-width="formLabelWidth" prop="price">
-          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入租赁单位"></el-input>
+        <el-form-item label="租赁单位" :label-width="formLabelWidth" prop="rentCompany">
+          <el-input v-model="orderForm.rentCompany" autocomplete="off" placeholder="请输入租赁单位"></el-input>
         </el-form-item>
-        <el-form-item label="承建人" :label-width="formLabelWidth" prop="price">
-          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入承建人"></el-input>
+        <el-form-item label="承建人" :label-width="formLabelWidth" prop="contractor">
+          <el-input v-model="orderForm.contractor" autocomplete="off" placeholder="请输入承建人"></el-input>
         </el-form-item>
         <el-form-item label="租金" :label-width="formLabelWidth" prop="price">
           <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入租金"></el-input>
         </el-form-item>
-        <el-form-item label="出租时长（月）" :label-width="formLabelWidth" prop="price">
-          <el-select v-model="value" placeholder="请选择出租时长">
+        <el-form-item label="出租时长（月）" :label-width="formLabelWidth" prop="duration">
+          <el-select v-model="orderForm.duration" placeholder="请选择出租时长">
             <el-option v-for="item in rentTimes" :key="item.value" :label="item.label" :value="item.value">
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="车辆" :label-width="formLabelWidth" prop="price">
-          <el-select v-model="value" placeholder="请选择车辆">
-            <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+        <el-form-item label="车辆" :label-width="formLabelWidth">
+          <el-select v-model="orderForm.car" placeholder="请选择车辆">
+            <el-option v-for="item in cars" :key="item.value" :label="item.label" :value="item.value">
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="备注" :label-width="formLabelWidth" prop="price">
-          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入备注"></el-input>
+        <el-form-item label="备注" :label-width="formLabelWidth">
+          <el-input v-model="orderForm.remark" autocomplete="off" placeholder="请输入备注"></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -113,12 +113,34 @@ export default {
       form: {},
       rules: {},
       value: '',
-      options: [],
+      cars: [],
       orderForm: {
         orderNo: '',
-        rentDate: new Date()
+        rentDate: new Date(),
+
       },
-      orderRules: {},
+      orderRules: {
+        orderNo: [
+          { required: true, message: '请输入订单编号', trigger: 'blur' }
+        ],
+        name: [{ required: true, message: '请输入制单人', trigger: 'blur' }],
+        rentCompany: [
+          { required: true, message: '请输入租赁单位', trigger: 'blur' }
+        ],
+        rentDate: [
+          { required: true, message: '请选择出租日期', trigger: 'blur' }
+        ],
+        contractor: [
+          { required: true, message: '请输入承建人', trigger: 'blur' }
+        ],
+        duration: [
+          { required: true, message: '请选择出租时长', trigger: 'blur' }
+        ],
+        price: [
+          { required: true, message: '请输入租金', trigger: 'blur' },
+          { type: 'number', message: '请输入数字', trigger: 'change' }
+        ]
+      },
       tableData: [],
       dialogTitle: '查询',
       dialogVisible: false,
@@ -143,7 +165,9 @@ export default {
       this.dialogVisible = true
       this.dialogTitle = '车辆租赁单新建'
       this.formType = 1
-      this.orderForm.orderNo = this.getOrderNo(this.orderForm.rentDate)
+      this.orderForm.orderNo = this.getOrderNo(
+        this.getFamateDate(this.orderForm.rentDate)
+      )
     },
     handleDel() {
       this.$confirm('确认删除?', '提示', {
@@ -165,9 +189,40 @@ export default {
           })
         })
     },
-    handleRowEdit(value) {},
-    handleRowDel(value) {},
-    addRentOrder() {},
+    handleRowEdit(value) {
+      console.log('sss', value)
+      this.dialogTitle = '修改租赁信息'
+      this.dialogVisible = true
+      this.formType = 1
+    },
+    handleRowDel(value) {
+      this.$confirm('确认删除？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+        center: true
+      }).then(() => {
+        this.$message({
+          type: 'success',
+          message: '删除成功！'
+        })
+      }).catch(() => {
+        this.message({
+          type: 'info',
+          message: '已取消'
+        })
+      })
+    },
+    addRentOrder() {
+      this.$refs.orderForm.validate(valid => {
+        if (valid) {
+          alert('submit!')
+        } else {
+          console.log('error submit!!')
+          return false
+        }
+      })
+    },
     handleSelectionChange() {},
     selectRow(section, row) {
       if (section.length > 0) this.delDisabled = false
@@ -179,6 +234,16 @@ export default {
       let flowNo = Math.floor(Math.random() * 1000)
       result = 'ZLD' + value.replace(/-/g, '') + flowNo
       return result
+    },
+    getFamateDate(value) {
+      let date = new Date(value)
+      let year = date.getFullYear()
+      let month =
+        date.getMonth() + 1 < 10
+          ? '0' + (date.getMonth() + 1)
+          : date.getMonth() + 1
+      let day = date.getDate() < 10 ? '0' + date.getDate() : date.getDate()
+      return year + '-' + month + '-' + day
     }
   }
 }
