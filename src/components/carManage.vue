@@ -17,7 +17,7 @@
           <el-button type="primary" size="small" :disabled="editCarDisable" @click="handleUpdateCar">修改车辆</el-button>
           <el-button type="primary" size="small" :disabled="delCarDisable" @click="handleDelCar">删除车辆</el-button>
         </div>
-        <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @select="selectRow"
+        <el-table :data="tableData" tooltip-effect="dark" style="width: 100%" @select="selectRow"
           @select-all="selectAll">
           <el-table-column type="selection" width="55">
           </el-table-column>
@@ -71,7 +71,7 @@
           <el-input v-model="carForm.carNumber" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
         </el-form-item>
         <el-form-item label="购买日期" :label-width="formLabelWidth" prop="carBuyTime">
-          <el-date-picker v-model="carForm.carBuyTime" type="date" placeholder="请选择购买日期时间">
+          <el-date-picker v-model="carForm.carBuyTime" type="date" placeholder="请选择购买日期">
           </el-date-picker>
         </el-form-item>
         <el-form-item label="购买价格" :label-width="formLabelWidth" prop="carBuyMonery">
@@ -121,7 +121,7 @@ export default {
     }
   },
   mounted() {
-    this.init()
+    this.getCar()
   },
   data() {
     return {
@@ -199,17 +199,6 @@ export default {
     }
   },
   methods: {
-    init() {
-      getCarType({
-        id: '00000000-0000-0000-0000-000000000000',
-        carTypeName: '车辆类型',
-        carTypeCode: '00'
-      }).then(res => {
-        if (res.data.status === 200) {
-          const { data } = res.data
-        }
-      })
-    },
     handleAddCar() {
       this.dialogVisible = true
       this.dialogTitle = '新增车辆信息'
@@ -410,20 +399,30 @@ export default {
       this.carTypeParent = data.carTypeParent
       this.editCarTypeDisable = false
       this.delCarTypeDisable = false
-      this.getCar()
-    },
-    getCar() {
-      let param = {
+      this.getCar({
         cartypeId: this.nodeObj.id,
         currentPage: 1,
         pageSize: 10,
         searchText: ''
+      })
+    },
+    getCar(
+      { cartypeId, currentPage, pageSize, searchText } = {
+        cartypeId: '00000000-0000-0000-0000-000000000000',
+        currentPage: 1,
+        pageSize: 10,
+        searchText: ''
+      }
+    ) {
+      let param = {
+        cartypeId,
+        currentPage,
+        pageSize,
+        searchText
       }
       getCar(param).then(res => {
-        console.log('res', res)
         if (res.status === 200) {
           this.tableData = res.data.list
-          console.log('sssssssssssss', res.data)
         }
       })
     },
