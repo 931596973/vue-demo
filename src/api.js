@@ -1,8 +1,8 @@
 import request from './request'
 
-export function getCarType({ id, name, code }) {
+export function getCarType({ id, carTypeName, carTypeCode }) {
   return request({
-    url: `/api/getCarType?id=${id}&carTypeName=${name}&carTypeCode=${code}`,
+    url: `/api/getCarType?id=${id}&carTypeName=${carTypeName}&carTypeCode=${carTypeCode}`,
     method: 'GET'
   })
 }
@@ -48,7 +48,7 @@ export function addCar(data) {
 
 export function updateCar(data) {
   return request({
-    url: '/modifyCar',
+    url: '/api/modifyCar',
     method: 'POST',
     data
   })
@@ -64,7 +64,7 @@ export function deleteCar(data) {
 
 export function getRent({ carCode, currentPage, pageSize, searchText }) {
   return request({
-    url: `/api/getRent?carCode=${carCode}&currentPage=${currentPage}&searchText=${searchText}`,
+    url: `/api/getRent?carCode=${carCode}&currentPage=${currentPage}&pageSize=${pageSize}&searchText=${searchText}`,
     method: 'GET'
   })
 }

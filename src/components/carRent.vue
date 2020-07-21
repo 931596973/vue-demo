@@ -5,30 +5,30 @@
       <el-button type="primary" size="small" @click="handleAdd">新建</el-button>
       <el-button type="primary" size="small" @click="handleDel" :disabled="delDisabled">删除</el-button>
     </div>
-    <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%"
-      @selection-change="handleSelectionChange" @select="selectRow">
+    <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @select-all="selectAll"
+      @select="selectRow">
       <el-table-column type="selection" width="55">
       </el-table-column>
-      <el-table-column prop="id" label="订单编号" width="120">
+      <el-table-column prop="bueCode" label="订单编号" :show-overflow-tooltip="true">
       </el-table-column>
-      <el-table-column prop="name" label="制单人" width="120">
+      <el-table-column prop="careateUser" label="制单人">
       </el-table-column>
-      <el-table-column prop="rentDate" label="出租日期" width="120">
+      <el-table-column prop="rentDate" label="出租日期" :show-overflow-tooltip="true">
       </el-table-column>
-      <el-table-column prop="buyCompany" label="出租单位" width="120">
+      <el-table-column prop="rentOrg" label="出租单位">
       </el-table-column>
-      <el-table-column prop="rentPrice" label="租金" width="120">
+      <el-table-column prop="rentMonery" label="租金">
       </el-table-column>
-      <el-table-column prop="rentTime" label="出租时长（月）" width="120">
+      <el-table-column prop="rentDuration" label="出租时长（月）">
       </el-table-column>
-      <el-table-column prop="car" label="车辆" width="120">
+      <el-table-column prop="carName" label="车辆">
       </el-table-column>
-      <el-table-column prop="rentName" label="承租人" width="120">
+      <el-table-column prop="rentUser" label="承租人">
       </el-table-column>
       <el-table-column label="操作" width="120" fixed="right">
         <template slot-scope="scope">
           <el-button @click="handleRowEdit(scope.row)" type="text" size="small">修改</el-button>
-          <el-button @click="handleRowDel(scope.$index)" type="text" size="small">删除</el-button>
+          <el-button @click="handleRowDel(scope.row)" type="text" size="small">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -37,47 +37,47 @@
       layout="total, sizes, prev, pager, next, jumper" :total="total">
     </el-pagination>
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible">
-      <el-form :model="form" :rules="rules" ref="form" v-if="formType === 0">
+      <el-form :model="form" ref="form" v-if="formType === 0">
         <el-form-item label="订单编号" :label-width="formLabelWidth" prop="typeId">
           <el-input v-model="form.id" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
         </el-form-item>
         <el-form-item label="车辆" :label-width="formLabelWidth">
-          <el-select v-model="value" placeholder="请选择车辆">
-            <el-option v-for="item in cars" :key="item.value" :label="item.label" :value="item.value">
+          <el-select v-model="form.carId" placeholder="请选择车辆">
+            <el-option v-for="item in cars" :key="item.id" :label="item.carName" :value="item.id">
             </el-option>
           </el-select>
         </el-form-item>
       </el-form>
       <el-form :model="orderForm" ref="orderForm" :rules="orderRules" v-if="formType === 1">
-        <el-form-item label="订单编号" :label-width="formLabelWidth" prop="orderNo">
-          <el-input v-model="orderForm.orderNo" autocomplete="off" readonly></el-input>
+        <el-form-item label="订单编号" :label-width="formLabelWidth" prop="bueCode">
+          <el-input v-model="orderForm.bueCode" autocomplete="off" readonly></el-input>
         </el-form-item>
-        <el-form-item label="制单人" :label-width="formLabelWidth" prop="name">
-          <el-input v-model="orderForm.name" autocomplete="off" placeholder="请输入制单人"></el-input>
+        <el-form-item label="制单人" :label-width="formLabelWidth" prop="careateUser">
+          <el-input v-model="orderForm.careateUser" autocomplete="off" placeholder="请输入制单人"></el-input>
         </el-form-item>
         <el-form-item label="出租日期" :label-width="formLabelWidth" prop="rentDate">
           <el-date-picker v-model="orderForm.rentDate" type="date" placeholder="请选择出租日期时间" value-format="yyyy-MM-dd"
             @change="handleDateChange">
           </el-date-picker>
         </el-form-item>
-        <el-form-item label="租赁单位" :label-width="formLabelWidth" prop="rentCompany">
-          <el-input v-model="orderForm.rentCompany" autocomplete="off" placeholder="请输入租赁单位"></el-input>
+        <el-form-item label="租赁单位" :label-width="formLabelWidth" prop="rentOrg">
+          <el-input v-model="orderForm.rentOrg" autocomplete="off" placeholder="请输入租赁单位"></el-input>
         </el-form-item>
-        <el-form-item label="承建人" :label-width="formLabelWidth" prop="contractor">
-          <el-input v-model="orderForm.contractor" autocomplete="off" placeholder="请输入承建人"></el-input>
+        <el-form-item label="承建人" :label-width="formLabelWidth" prop="rentUser">
+          <el-input v-model="orderForm.rentUser" autocomplete="off" placeholder="请输入承建人"></el-input>
         </el-form-item>
-        <el-form-item label="租金" :label-width="formLabelWidth" prop="price">
-          <el-input v-model="orderForm.price" autocomplete="off" placeholder="请输入租金"></el-input>
+        <el-form-item label="租金" :label-width="formLabelWidth" prop="rentMonery">
+          <el-input v-model.number="orderForm.rentMonery" autocomplete="off" placeholder="请输入租金"></el-input>
         </el-form-item>
-        <el-form-item label="出租时长（月）" :label-width="formLabelWidth" prop="duration">
-          <el-select v-model="orderForm.duration" placeholder="请选择出租时长">
+        <el-form-item label="出租时长（月）" :label-width="formLabelWidth" prop="rentDuration">
+          <el-select v-model="orderForm.rentDuration" placeholder="请选择出租时长">
             <el-option v-for="item in rentTimes" :key="item.value" :label="item.label" :value="item.value">
             </el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="车辆" :label-width="formLabelWidth">
-          <el-select v-model="orderForm.car" placeholder="请选择车辆">
-            <el-option v-for="item in cars" :key="item.value" :label="item.label" :value="item.value">
+          <el-select v-model="orderForm.carId" placeholder="请选择车辆">
+            <el-option v-for="item in cars" :key="item.id" :label="item.carName" :value="item.id">
             </el-option>
           </el-select>
         </el-form-item>
@@ -87,56 +87,57 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addRentOrder">确 定</el-button>
+        <el-button type="primary" @click="confirmDialog">确 定</el-button>
       </span>
     </el-dialog>
   </div>
 </template>
 
 <script>
+import { getRent, updateRent, addRent, deleteRent, getCar } from '../api'
+
 export default {
   computed: {
     total() {
       return this.tableData.length
     }
   },
-  created() {
-    this.$axios.get('http://localhost:8080/mock/news').then(res => {
-      console.log(res.data)
-      this.tableData = res.data
-    })
+  mounted() {
+    this.getCar()
+    this.init()
   },
   data() {
     return {
       delDisabled: true,
       formType: 0,
       form: {},
-      rules: {},
       value: '',
       cars: [],
       orderForm: {
-        orderNo: '',
-        rentDate: new Date(),
-
+        id: '',
+        bueCode: '',
+        rentDate: new Date()
       },
       orderRules: {
-        orderNo: [
+        bueCode: [
           { required: true, message: '请输入订单编号', trigger: 'blur' }
         ],
-        name: [{ required: true, message: '请输入制单人', trigger: 'blur' }],
-        rentCompany: [
+        careateUser: [
+          { required: true, message: '请输入制单人', trigger: 'blur' }
+        ],
+        rentOrg: [
           { required: true, message: '请输入租赁单位', trigger: 'blur' }
         ],
         rentDate: [
           { required: true, message: '请选择出租日期', trigger: 'blur' }
         ],
-        contractor: [
+        rentUser: [
           { required: true, message: '请输入承建人', trigger: 'blur' }
         ],
-        duration: [
+        rentDuration: [
           { required: true, message: '请选择出租时长', trigger: 'blur' }
         ],
-        price: [
+        rentMonery: [
           { required: true, message: '请输入租金', trigger: 'blur' },
           { type: 'number', message: '请输入数字', trigger: 'change' }
         ]
@@ -149,23 +150,61 @@ export default {
         { label: '1月', value: 1 },
         { label: '2月', value: 2 },
         { label: '3月', value: 3 }
-      ]
+      ],
+      delArr: [],
+      isAdd: true
     }
   },
   methods: {
+    getCar() {
+      let param = {
+        cartypeId: '00000000-0000-0000-0000-000000000000',
+        currentPage: 1,
+        pageSize: 10,
+        searchText: ''
+      }
+      getCar(param).then(res => {
+        console.log('res', res)
+        if (res.status === 200) {
+          this.cars = res.data.list
+          console.log('sssssssssssss', res.data)
+        }
+      })
+    },
+    init(
+      { carCode, currentPage, pageSize, searchText } = {
+        carCode: '',
+        currentPage: 1,
+        pageSize: 10,
+        searchText: ''
+      }
+    ) {
+      let param = {
+        carCode,
+        currentPage,
+        pageSize,
+        searchText
+      }
+      getRent(param).then(res => {
+        if (res.status === 200) {
+          this.tableData = res.data.list
+        }
+      })
+    },
     handleDateChange(value) {
       console.log('date', value)
-      this.orderForm.orderNo = this.getOrderNo(value)
+      this.orderForm.bueCode = this.getOrderNo(value)
       console.log('datess', this.getOrderNo(value))
     },
     handleQuery() {
       this.dialogVisible = true
+      this.formType = 0
     },
     handleAdd() {
       this.dialogVisible = true
       this.dialogTitle = '车辆租赁单新建'
       this.formType = 1
-      this.orderForm.orderNo = this.getOrderNo(
+      this.orderForm.bueCode = this.getOrderNo(
         this.getFamateDate(this.orderForm.rentDate)
       )
     },
@@ -177,9 +216,27 @@ export default {
         center: true
       })
         .then(() => {
-          this.$message({
-            type: 'success',
-            message: '删除成功!'
+          let param = {
+            carId: '',
+            currentPage: 1,
+            pageSize: 10,
+            rentBeans: this.delArr,
+            rentIds: [],
+            searchText: ''
+          }
+          deleteRent(param).then(res => {
+            if (res.status === 200) {
+              this.$message({
+                type: 'success',
+                message: '删除成功!'
+              })
+              this.init()
+            } else {
+              this.$message({
+                type: 'error',
+                message: '删除失败!'
+              })
+            }
           })
         })
         .catch(() => {
@@ -191,9 +248,11 @@ export default {
     },
     handleRowEdit(value) {
       console.log('sss', value)
+      this.orderForm = value
       this.dialogTitle = '修改租赁信息'
       this.dialogVisible = true
       this.formType = 1
+      this.isAdd = false
     },
     handleRowDel(value) {
       this.$confirm('确认删除？', '提示', {
@@ -201,31 +260,100 @@ export default {
         cancelButtonText: '取消',
         type: 'warning',
         center: true
-      }).then(() => {
-        this.$message({
-          type: 'success',
-          message: '删除成功！'
-        })
-      }).catch(() => {
-        this.message({
-          type: 'info',
-          message: '已取消'
-        })
       })
+        .then(() => {
+          let param = {
+            carId: '',
+            currentPage: 1,
+            pageSize: 10,
+            rentBeans: [value],
+            rentIds: [],
+            searchText: ''
+          }
+          deleteRent(param).then(res => {
+            if (res.status === 200) {
+              this.$message({
+                type: 'success',
+                message: '删除成功!'
+              })
+              this.init()
+            } else {
+              this.$message({
+                type: 'error',
+                message: '删除失败!'
+              })
+            }
+          })
+        })
+        .catch(() => {
+          this.message({
+            type: 'info',
+            message: '已取消'
+          })
+        })
     },
-    addRentOrder() {
-      this.$refs.orderForm.validate(valid => {
-        if (valid) {
-          alert('submit!')
+    addRent() {
+      this.orderForm.carCode = ''
+      this.orderForm.carName = ''
+      addRent(this.orderForm).then(res => {
+        if (res.status === 200) {
+          this.$message({
+            type: 'success',
+            message: '添加成功'
+          })
+          this.init()
+          this.dialogVisible = false
         } else {
-          console.log('error submit!!')
-          return false
+          this.$message({
+            type: 'error',
+            message: '添加失败'
+          })
         }
       })
     },
-    handleSelectionChange() {},
+    updateRent() {
+      updateRent(this.orderForm).then(res => {
+        if (res.status === 200) {
+          if (res.status === 200) {
+            this.$message({
+              type: 'success',
+              message: '修改成功'
+            })
+            this.dialogVisible = false
+          } else {
+            this.$message({
+              type: 'error',
+              message: '修改失败'
+            })
+          }
+        }
+      })
+    },
+    confirmDialog() {
+      if (this.formType === 0) {
+        this.init({carCode:this.form.carId,currentPage:1,pageSize:10,searchText:this.form.id})
+        this.dialogVisible = false
+      } else if (this.formType === 1) {
+        this.$refs.orderForm.validate(valid => {
+          if (valid) {
+            if (this.isAdd) {
+              this.addRent()
+            } else {
+              this.updateRent()
+            }
+          } else {
+            return false
+          }
+        })
+      }
+    },
+    selectAll(selection) {
+      this.delDisabled = false
+      this.delArr = selection
+    },
     selectRow(section, row) {
       if (section.length > 0) this.delDisabled = false
+      this.delArr = section
     },
     handleSizeChange() {},
     handleCurrentChange() {},

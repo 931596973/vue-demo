@@ -11,25 +11,27 @@
           <el-button type="primary" size="small" @click="handleAddCarType">新增车辆类型</el-button>
           <el-button type="primary" size="small" :disabled="editCarTypeDisable" @click="handleUpdateCarType">修改车辆类型
           </el-button>
-          <el-button type="primary" size="small" @click="handleDeleteCarType">删除车辆类型</el-button>
-          <el-button type="primary" size="small" @click="addCar">新增车辆</el-button>
-          <el-button type="primary" size="small" :disabled="editCarDisable">修改车辆</el-button>
-          <el-button type="primary" size="small" :disabled="delCarDisable" @click="delCar">删除车辆</el-button>
+          <el-button type="primary" size="small" :disabled="delCarTypeDisable" @click="handleDeleteCarType">删除车辆类型
+          </el-button>
+          <el-button type="primary" size="small" @click="handleAddCar">新增车辆</el-button>
+          <el-button type="primary" size="small" :disabled="editCarDisable" @click="handleUpdateCar">修改车辆</el-button>
+          <el-button type="primary" size="small" :disabled="delCarDisable" @click="handleDelCar">删除车辆</el-button>
         </div>
-        <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @select="selectRow">
+        <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @select="selectRow"
+          @select-all="selectAll">
           <el-table-column type="selection" width="55">
           </el-table-column>
-          <el-table-column prop="id" label="车辆编码" width="120">
+          <el-table-column prop="carCode" label="车辆编码">
           </el-table-column>
-          <el-table-column prop="name" label="名称" width="120">
+          <el-table-column prop="carName" label="名称">
           </el-table-column>
-          <el-table-column prop="carNumber" label="车牌号" width="120">
+          <el-table-column prop="carNumber" label="车牌号">
           </el-table-column>
-          <el-table-column prop="buyDate" label="购买日期" width="120">
+          <el-table-column prop="carBuyTime" label="购买日期">
           </el-table-column>
-          <el-table-column prop="price" label="购买价格" width="120">
+          <el-table-column prop="carBuyMonery" label="购买价格">
           </el-table-column>
-          <el-table-column prop="rentStatus" label="租赁状态" width="120">
+          <el-table-column prop="rentState" label="租赁状态">
           </el-table-column>
           <el-table-column label="操作" width="120" fixed="right">
             <template slot-scope="scope">
@@ -48,8 +50,8 @@
 
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible">
       <el-form :model="form" :rules="rules" ref="form" v-if="formType === 0">
-        <el-form-item label="类型编码" :label-width="formLabelWidth" prop="carTypeId">
-          <el-input v-model="form.carTypeId" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
+        <el-form-item label="类型编码" :label-width="formLabelWidth" prop="carTypeCode">
+          <el-input v-model="form.carTypeCode" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
         </el-form-item>
         <el-form-item label="类型名称" :label-width="formLabelWidth" prop="carTypeName">
           <el-input v-model="form.carTypeName" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
@@ -58,31 +60,32 @@
           <treeselect v-model="form.carTypeParent" :options="options" :load-options="loadOptions" />
         </el-form-item>
       </el-form>
-      <el-form :model="carForm" :rules="carRules" ref="form" v-if="formType === 1">
-        <el-form-item label="车辆编码" :label-width="formLabelWidth" prop="id">
-          <el-input v-model="carForm.id" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
+      <el-form :model="carForm" :rules="carRules" ref="carForm" v-if="formType === 1">
+        <el-form-item label="车辆编码" :label-width="formLabelWidth" prop="carCode">
+          <el-input v-model="carForm.carCode" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
         </el-form-item>
-        <el-form-item label="车辆名称" :label-width="formLabelWidth" prop="name">
-          <el-input v-model="carForm.name" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
+        <el-form-item label="车辆名称" :label-width="formLabelWidth" prop="carName">
+          <el-input v-model="carForm.carName" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
         </el-form-item>
         <el-form-item label="车牌号" :label-width="formLabelWidth" prop="carNumber">
           <el-input v-model="carForm.carNumber" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
         </el-form-item>
-        <el-form-item label="购买日期" :label-width="formLabelWidth" prop="buyDate">
-          <el-date-picker v-model="carForm.buyDate" type="date" placeholder="请选择购买日期时间">
+        <el-form-item label="购买日期" :label-width="formLabelWidth" prop="carBuyTime">
+          <el-date-picker v-model="carForm.carBuyTime" type="date" placeholder="请选择购买日期时间">
           </el-date-picker>
         </el-form-item>
-        <el-form-item label="购买价格" :label-width="formLabelWidth" prop="price">
-          <el-input v-model="carForm.price" autocomplete="off" placeholder="请输入车辆价格"></el-input>
+        <el-form-item label="购买价格" :label-width="formLabelWidth" prop="carBuyMonery">
+          <el-input v-model="carForm.carBuyMonery" autocomplete="off" placeholder="请输入车辆价格"></el-input>
         </el-form-item>
-        <el-form-item label="租赁状态" :label-width="formLabelWidth" prop="typeName">
-          <el-radio-group v-model="radio">
+        <el-form-item label="租赁状态" :label-width="formLabelWidth">
+          <el-radio-group v-model="carForm.rentState">
             <el-radio label="已租赁" disabled>已租赁</el-radio>
             <el-radio label="未租赁" disabled>未租赁</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="车辆类型" :label-width="formLabelWidth" prop="typeName">
-          <el-input v-model="carForm.carType" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
+        <el-form-item label="车辆类型" :label-width="formLabelWidth" prop="careTypeId">
+          <treeselect v-model="carForm.careTypeId" :options="options" :load-options="loadOptions"
+            @select="handleTreeSelected" />
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -101,7 +104,11 @@ import {
   getCarType,
   updateCarType,
   addCarType,
-  deleteCaarType
+  deleteCaarType,
+  addCar,
+  getCar,
+  updateCar,
+  deleteCar
 } from '../api.js'
 
 export default {
@@ -113,7 +120,7 @@ export default {
       return this.tableData.length
     }
   },
-  created() {
+  mounted() {
     this.init()
   },
   data() {
@@ -126,10 +133,11 @@ export default {
       radio: '未租赁',
       editCarDisable: true,
       editCarTypeDisable: true,
+      delCarTypeDisable: true,
       delCarDisable: true,
       formType: 0,
       rules: {
-        carTypeId: [
+        carTypeCode: [
           { required: true, message: '请输入车辆类型编码', trigger: 'blur' }
         ],
         carTypeName: [
@@ -137,62 +145,85 @@ export default {
         ]
       },
       carRules: {
-        id: [{ required: true, message: '请输入车辆编码', trigger: 'blur' }],
-        name: [{ required: true, message: '请输入车辆名称', trigger: 'blur' }],
+        carCode: [
+          { required: true, message: '请输入车辆编码', trigger: 'blur' }
+        ],
+        carName: [
+          { required: true, message: '请输入车辆名称', trigger: 'blur' }
+        ],
         carNumber: [
           { required: true, message: '请输入车牌号', trigger: 'blur' }
         ],
-        buyDate: [
+        carBuyTime: [
           { required: true, message: '请选择购买日期', trigger: 'blur' }
         ],
-        price: [
-          { required: true, message: '请输入车辆价格', trigger: 'blur' },
-          { type: 'number', message: '请输入数字', trigger: 'change' }
+        carBuyMonery: [
+          { required: true, message: '请输入车辆价格', trigger: 'blur' }
+        ],
+        careTypeId: [
+          { required: true, message: '请选择车辆类型', trigger: 'blur' }
         ]
       },
-      value: null,
-      // define options
       options: [
         {
           id: '00000000-0000-0000-0000-000000000000',
           label: '00 车辆品牌',
+          carTypeName: '车辆类型',
+          carTypeCode: '00',
           children: null
         }
       ],
       formLabelWidth: '120px',
-      form: {},
-      carForm: {},
+      form: {
+        id: ''
+      },
+      carForm: {
+        rentState: '未租赁',
+        careTypeId: null,
+        carBuyMonery: '',
+        carBuyTime: '',
+        carCode: '',
+        carName: '',
+        carNumber: ''
+      },
       tableData: [],
       dialogTitle: '新增车辆类型',
       dialogVisible: false,
-      carTypeObj: {
-        id: '',
-        carTypeCode: '',
-        carTypeName: '',
-        carTypeParent: ''
+      carTypeParent: '',
+      nodeObj: {},
+      isAdd: true,
+      delParam: {
+        carBeans: [],
+        cartypeIds: []
       }
     }
   },
   methods: {
     init() {
-      getCarType(
-        '00000000-0000-0000-0000-000000000000',
-        '车辆类型',
-        '00'
-      ).then(res => {
+      getCarType({
+        id: '00000000-0000-0000-0000-000000000000',
+        carTypeName: '车辆类型',
+        carTypeCode: '00'
+      }).then(res => {
         if (res.data.status === 200) {
           const { data } = res.data
-          console.log(data)
         }
       })
     },
-    addCar() {
+    handleAddCar() {
       this.dialogVisible = true
       this.dialogTitle = '新增车辆信息'
       this.formType = 1
+      this.isAdd = true
+    },
+    handleUpdateCar() {
+      this.dialogTitle = '修改车辆信息'
+      this.formType = 1
+      this.isAdd = false
+      this.dialogVisible = true
+      this.carForm = this.nodeObj
     },
     handleEdit(value) {
-      console.log('scope', value)
       this.formType = 1
       this.dialogVisible = true
       this.dialogTitle = '修改车辆信息'
@@ -228,10 +259,9 @@ export default {
       this.dialogVisible = true
       this.dialogTitle = '新增车辆类型'
       this.formType = 0
+      this.isAdd = true
     },
     addCarType() {
-      this.form.id = ''
-      this.form.carTypeCode = this.form.carTypeId
       addCarType(this.form).then(res => {
         if (res.data.status === 200) {
           this.$message({
@@ -247,20 +277,85 @@ export default {
         }
       })
     },
+    updateCarType() {
+      updateCarType(this.form).then(res => {
+        if (res.data.status === 200) {
+          this.$message({
+            type: 'success',
+            message: '修改成功'
+          })
+          this.dialogVisible = false
+        } else {
+          this.$message({
+            type: 'error',
+            message: '修改失败'
+          })
+        }
+      })
+    },
+    addCar() {
+      let param = {}
+      param = this.carForm
+      param.id = ''
+
+      param.careTypeName = this.nodeObj.carTypeName
+      param.careTypeCode = this.nodeObj.carTypeCode
+      param.carBuyMonery = Number.parseInt(this.carForm.carBuyMonery)
+      addCar(param).then(res => {
+        if (res.data.status === 200) {
+          this.$message({
+            type: 'success',
+            message: '添加成功'
+          })
+          this.dialogVisible = false
+        } else {
+          this.$message({
+            type: 'error',
+            message: '添加失败'
+          })
+        }
+      })
+    },
+    updateCar() {
+      updateCar(this.carForm).then(res => {
+        console.log('res', res)
+        if (res.status === 200) {
+          this.$message({
+            type: 'success',
+            message: '修改成功'
+          })
+          this.dialogVisible = false
+        } else {
+          this.$message({
+            type: 'error',
+            message: '修改失败'
+          })
+        }
+      })
+    },
     confirmDialog() {
       // 车辆类型
       if (this.formType === 0) {
         this.$refs.form.validate(valid => {
           if (valid) {
-            this.addCarType()
+            if (this.isAdd) {
+              this.addCarType()
+            } else {
+              this.updateCarType()
+            }
           } else {
             return false
           }
         })
+        // 车辆
       } else if (this.formType === 1) {
         this.$refs.carForm.validate(valid => {
           if (valid) {
-            alert('ss')
+            if (this.isAdd) {
+              this.addCar()
+            } else {
+              this.updateCar()
+            }
           } else {
             return false
           }
@@ -268,99 +363,157 @@ export default {
       }
     },
     selectRow(selection, row) {
-      console.log('selection', selection)
-      console.log('row', row)
       selection.length === 1
         ? (this.editCarDisable = false)
         : (this.editCarDisable = true)
       this.delCarDisable = false
+      this.nodeObj = row
+      console.log('row', row)
     },
-    delCar() {},
+    selectAll(selection) {
+      console.log('selection', selection)
+      this.delParam.carBeans = selection
+      this.delCarDisable = false
+    },
+    handleDelCar() {
+      this.$confirm('确认删除?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+        center: true
+      })
+        .then(() => {
+          deleteCar(this.delParam).then(res => {
+            if (res.status === 200) {
+              this.$message({
+                type: 'success',
+                message: '删除成功!'
+              })
+            } else {
+              this.$message({
+                type: 'error',
+                message: '删除失败!'
+              })
+            }
+          })
+        })
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消'
+          })
+        })
+    },
     handleNodeClick(data) {
-      this.carTypeObj.carTypeName = data.carTypeName
-      this.carTypeObj.carTypeCode = data.carTypeCode
-      this.carTypeObj.carTypeParent = data.carTypeParent
+      console.log('data', data)
+      this.nodeObj = data
+      this.carTypeParent = data.carTypeParent
+      this.editCarTypeDisable = false
+      this.delCarTypeDisable = false
+      this.getCar()
+    },
+    getCar() {
+      let param = {
+        cartypeId: this.nodeObj.id,
+        currentPage: 1,
+        pageSize: 10,
+        searchText: ''
+      }
+      getCar(param).then(res => {
+        console.log('res', res)
+        if (res.status === 200) {
+          this.tableData = res.data.list
+          console.log('sssssssssssss', res.data)
+        }
+      })
     },
     handleUpdateCarType() {
-      updateCarType().then(res => {})
+      this.dialogVisible = true
+      this.dialogTitle = '修改车辆类型'
+      this.formType = 0
+      this.form = this.nodeObj
+      this.isAdd = false
     },
     handleDeleteCarType() {
-
+      this.$confirm('确认删除?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+        center: true
+      })
+        .then(() => {
+          deleteCaarType(this.nodeObj).then(res => {
+            if (res.data.status === 200) {
+              this.$message({
+                type: 'success',
+                message: '删除成功!'
+              })
+            } else {
+              this.$message({
+                type: 'error',
+                message: '删除失败!'
+              })
+            }
+          })
+        })
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消'
+          })
+        })
+    },
+    handleTreeSelected(node, instanceId) {
+      console.log('node', node)
+      console.log('instanceId', instanceId)
+      this.nodeObj = node
     },
     loadOptions({ action, parentNode, callback }) {
       console.log('action', action)
       console.log('parentNode', parentNode)
       console.log('callback', callback)
-      // Typically, do the AJAX stuff here.
-      // Once the server has responded,
-      // assign children options to the parent node & call the callback.
+      console.log('gggg')
       if (action === LOAD_CHILDREN_OPTIONS) {
-        switch (parentNode.id) {
-          case 'success': {
-            simulateAsyncOperation(() => {
-              parentNode.children = [
-                {
-                  id: 'child',
-                  label: 'Child option'
-                }
-              ]
-              callback()
+        getCarType(parentNode).then(res => {
+          if (res.data.status === 200) {
+            parentNode.children = res.data.data.map(item => {
+              item.label = item.carTypeName
+              item.children = null
+              return item
             })
-            break
+            callback()
           }
-          case 'no-children': {
-            simulateAsyncOperation(() => {
-              parentNode.children = []
-              callback()
-            })
-            break
-          }
-          case 'failure': {
-            simulateAsyncOperation(() => {
-              callback(new Error('Failed to load options: network error.'))
-            })
-            break
-          }
-          default: /* empty */
-        }
+        })
       }
     },
     loadNode(node, resolve) {
-      const { data } = node
-      console.log(node)
+      let { data } = node
       if (node.level === 0) {
         return resolve([
           {
             carTypeName: '00 车辆品牌',
             carTypeCode: '111',
-            carTypeParent: '00000000-0000-0000-0000-000000000000'
+            carTypeParent: '00000000-0000-0000-0000-000000000000',
+            id: ''
           }
         ])
       }
-      if (node.level > 0) {
-        getCarType(
-          data.carTypeParent,
-          data.carTypeName,
-          data.carTypeCode
-        ).then(res => {
-          console.log(res)
-          return resolve([])
+
+      if (node.level === 1) {
+        data.id = data.carTypeParent
+        getCarType(data).then(res => {
+          if (res.data.status === 200) {
+            return resolve(res.data.data)
+          }
         })
       }
-
-      // setTimeout(() => {
-      //   const data = [
-      //     {
-      //       name: 'leaf',
-      //       leaf: true
-      //     },
-      //     {
-      //       name: 'zone'
-      //     }
-      //   ]
-
-      //   resolve(data)
-      // }, 500)
+      if (node.level > 1) {
+        getCarType(data).then(res => {
+          if (res.data.status === 200) {
+            return resolve(res.data.data)
+          }
+        })
+      }
     }
   }
 }
