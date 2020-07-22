@@ -31,9 +31,9 @@ export function deleteCaarType(data) {
   })
 }
 
-export function getCar({ cartypeId, currentPage, pageSize, searchText }) {
+export function getCar({ cartypeId, pageNum, pageSize, searchText }) {
   return request({
-    url: `/api/getCar?cartypeId=${cartypeId}&currentPage=${currentPage}&pageSize=${pageSize}&searchText=${searchText}`,
+    url: `/api/getCar?cartypeId=${cartypeId}&pageNum=${pageNum}&pageSize=${pageSize}&searchText=${searchText}`,
     method: 'GET'
   })
 }
@@ -62,9 +62,9 @@ export function deleteCar(data) {
   })
 }
 
-export function getRent({ carCode, currentPage, pageSize, searchText }) {
+export function getRent({ carCode, pageNum, pageSize, searchText }) {
   return request({
-    url: `/api/getRent?carCode=${carCode}&currentPage=${currentPage}&pageSize=${pageSize}&searchText=${searchText}`,
+    url: `/api/getRent?carCode=${carCode}&pageNum=${pageNum}&pageSize=${pageSize}&searchText=${searchText}`,
     method: 'GET'
   })
 }

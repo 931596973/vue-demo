@@ -43,7 +43,8 @@
         </el-form-item>
         <el-form-item label="车辆" :label-width="formLabelWidth">
           <el-select v-model="form.carId" placeholder="请选择车辆">
-            <el-option v-for="item in cars" :key="item.id" :label="item.carName" :value="item.id">
+            <el-option v-for="item in cars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
+              :value="item.id">
             </el-option>
           </el-select>
         </el-form-item>
@@ -77,7 +78,8 @@
         </el-form-item>
         <el-form-item label="车辆" :label-width="formLabelWidth">
           <el-select v-model="orderForm.carId" placeholder="请选择车辆">
-            <el-option v-for="item in cars" :key="item.id" :label="item.carName" :value="item.id">
+            <el-option v-for="item in cars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
+              :value="item.id">
             </el-option>
           </el-select>
         </el-form-item>
@@ -97,17 +99,15 @@
 import { getRent, updateRent, addRent, deleteRent, getCar } from '../api'
 
 export default {
-  computed: {
-    total() {
-      return this.tableData.length
-    }
-  },
   mounted() {
     this.getCar()
-    this.init()
+    this.getRent()
   },
   data() {
     return {
+      pageNum: 1,
+      pageSize: 5,
+      total:0,
       delDisabled: true,
       formType: 0,
       form: {},
@@ -159,35 +159,36 @@ export default {
     getCar() {
       let param = {
         cartypeId: '00000000-0000-0000-0000-000000000000',
-        currentPage: 1,
-        pageSize: 10,
+        pageNum: this.pageNum,
+        pageSize: this.pageSize,
         searchText: ''
       }
       getCar(param).then(res => {
         console.log('res', res)
         if (res.status === 200) {
-          this.cars = res.data.list
+          this.cars = res.data.list.filter(item => item.rentState === '未租赁')
           console.log('sssssssssssss', res.data)
         }
       })
     },
-    init(
-      { carCode, currentPage, pageSize, searchText } = {
+    getRent(
+      { carCode, pageNum, pageSize, searchText } = {
         carCode: '',
-        currentPage: 1,
-        pageSize: 10,
+        pageNum: this.pageNum,
+        pageSize: this.pageSize,
         searchText: ''
       }
     ) {
       let param = {
         carCode,
-        currentPage,
+        pageNum,
         pageSize,
         searchText
       }
       getRent(param).then(res => {
         if (res.status === 200) {
           this.tableData = res.data.list
+          this.total = res.data.total
         }
       })
     },
@@ -218,8 +219,8 @@ export default {
         .then(() => {
           let param = {
             carId: '',
-            currentPage: 1,
-            pageSize: 10,
+            pageNum: this.pageNum,
+            pageSize: this.pageSize,
             rentBeans: this.delArr,
             rentIds: [],
             searchText: ''
@@ -230,7 +231,7 @@ export default {
                 type: 'success',
                 message: '删除成功!'
               })
-              this.init()
+              this.getRent()
             } else {
               this.$message({
                 type: 'error',
@@ -264,8 +265,8 @@ export default {
         .then(() => {
           let param = {
             carId: '',
-            currentPage: 1,
-            pageSize: 10,
+            pageNum: this.pageNum,
+            pageSize: this.pageSize,
             rentBeans: [value],
             rentIds: [],
             searchText: ''
@@ -276,7 +277,7 @@ export default {
                 type: 'success',
                 message: '删除成功!'
               })
-              this.init()
+              this.getRent()
             } else {
               this.$message({
                 type: 'error',
@@ -301,7 +302,7 @@ export default {
             type: 'success',
             message: '添加成功'
           })
-          this.init()
+          this.getRent()
           this.dialogVisible = false
         } else {
           this.$message({
@@ -331,7 +332,12 @@ export default {
     },
     confirmDialog() {
       if (this.formType === 0) {
-        this.init({carCode:this.form.carId,currentPage:1,pageSize:10,searchText:this.form.id})
+        this.getRent({
+          carCode: this.form.carId,
+          pageNum: this.pageNum,
+          pageSize: this.pageSize,
+          searchText: this.form.id
+        })
         this.dialogVisible = false
       } else if (this.formType === 1) {
         this.$refs.orderForm.validate(valid => {
@@ -355,8 +361,14 @@ export default {
       if (section.length > 0) this.delDisabled = false
       this.delArr = section
     },
-    handleSizeChange() {},
-    handleCurrentChange() {},
+    handleSizeChange(value) {
+      this.pageSize = value
+      this.getRent()
+    },
+    handleCurrentChange() {
+      this.pageNum ++
+      this.getRent()
+    },
     getOrderNo(value) {
       let result = ''
       let flowNo = Math.floor(Math.random() * 1000)
