@@ -36,14 +36,14 @@
       :current-page="1" :page-sizes="[5, 10, 20, 30, 50]" :page-size="5"
       layout="total, sizes, prev, pager, next, jumper" :total="total">
     </el-pagination>
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible">
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px">
       <el-form :model="form" ref="form" v-if="formType === 0">
-        <el-form-item label="订单编号" :label-width="formLabelWidth" prop="typeId">
-          <el-input v-model="form.id" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
+        <el-form-item label="订单编号" :label-width="formLabelWidth">
+          <el-input v-model="form.id" autocomplete="off" placeholder="请输入订单编号"></el-input>
         </el-form-item>
         <el-form-item label="车辆" :label-width="formLabelWidth">
           <el-select v-model="form.carId" placeholder="请选择车辆">
-            <el-option v-for="item in cars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
+            <el-option v-for="item in allCars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
               :value="item.id">
             </el-option>
           </el-select>
@@ -84,7 +84,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="备注" :label-width="formLabelWidth">
-          <el-input v-model="orderForm.remark" autocomplete="off" placeholder="请输入备注"></el-input>
+          <el-input v-model="orderForm.extInfo" autocomplete="off" placeholder="请输入备注"></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -107,40 +107,41 @@ export default {
     return {
       pageNum: 1,
       pageSize: 5,
-      total:0,
+      total: 0,
       delDisabled: true,
       formType: 0,
       form: {},
       value: '',
       cars: [],
+      allCars: [],
       orderForm: {
         id: '',
         bueCode: '',
-        rentDate: new Date()
+        rentDate: new Date(),
       },
       orderRules: {
         bueCode: [
-          { required: true, message: '请输入订单编号', trigger: 'blur' }
+          { required: true, message: '请输入订单编号', trigger: 'blur' },
         ],
         careateUser: [
-          { required: true, message: '请输入制单人', trigger: 'blur' }
+          { required: true, message: '请输入制单人', trigger: 'blur' },
         ],
         rentOrg: [
-          { required: true, message: '请输入租赁单位', trigger: 'blur' }
+          { required: true, message: '请输入租赁单位', trigger: 'blur' },
         ],
         rentDate: [
-          { required: true, message: '请选择出租日期', trigger: 'blur' }
+          { required: true, message: '请选择出租日期', trigger: 'blur' },
         ],
         rentUser: [
-          { required: true, message: '请输入承建人', trigger: 'blur' }
+          { required: true, message: '请输入承建人', trigger: 'blur' },
         ],
         rentDuration: [
-          { required: true, message: '请选择出租时长', trigger: 'blur' }
+          { required: true, message: '请选择出租时长', trigger: 'blur' },
         ],
         rentMonery: [
-          { required: true, message: '请输入租金', trigger: 'blur' },
-          { type: 'number', message: '请输入数字', trigger: 'change' }
-        ]
+          { required: true, message: '请输入租金', trigger: 'change' },
+          { type: 'number', message: '请输入数字', trigger: 'change' },
+        ],
       },
       tableData: [],
       dialogTitle: '查询',
@@ -149,25 +150,26 @@ export default {
       rentTimes: [
         { label: '1月', value: 1 },
         { label: '2月', value: 2 },
-        { label: '3月', value: 3 }
+        { label: '3月', value: 3 },
       ],
       delArr: [],
-      isAdd: true
+      isAdd: true,
     }
   },
   methods: {
     getCar() {
       let param = {
         cartypeId: '00000000-0000-0000-0000-000000000000',
-        pageNum: this.pageNum,
-        pageSize: this.pageSize,
-        searchText: ''
+        pageNum: 1,
+        pageSize: 999,
+        searchText: '',
       }
-      getCar(param).then(res => {
-        console.log('res', res)
+      getCar(param).then((res) => {
         if (res.status === 200) {
-          this.cars = res.data.list.filter(item => item.rentState === '未租赁')
-          console.log('sssssssssssss', res.data)
+          this.cars = res.data.list.filter(
+            (item) => item.rentState === '未租赁'
+          )
+          this.allCars = res.data.list
         }
       })
     },
@@ -176,16 +178,16 @@ export default {
         carCode: '',
         pageNum: this.pageNum,
         pageSize: this.pageSize,
-        searchText: ''
+        searchText: '',
       }
     ) {
       let param = {
         carCode,
         pageNum,
         pageSize,
-        searchText
+        searchText,
       }
-      getRent(param).then(res => {
+      getRent(param).then((res) => {
         if (res.status === 200) {
           this.tableData = res.data.list
           this.total = res.data.total
@@ -193,9 +195,7 @@ export default {
       })
     },
     handleDateChange(value) {
-      console.log('date', value)
       this.orderForm.bueCode = this.getOrderNo(value)
-      console.log('datess', this.getOrderNo(value))
     },
     handleQuery() {
       this.dialogVisible = true
@@ -214,7 +214,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
-        center: true
+        center: true,
       })
         .then(() => {
           let param = {
@@ -223,19 +223,19 @@ export default {
             pageSize: this.pageSize,
             rentBeans: this.delArr,
             rentIds: [],
-            searchText: ''
+            searchText: '',
           }
-          deleteRent(param).then(res => {
+          deleteRent(param).then((res) => {
             if (res.status === 200) {
               this.$message({
                 type: 'success',
-                message: '删除成功!'
+                message: '删除成功!',
               })
               this.getRent()
             } else {
               this.$message({
                 type: 'error',
-                message: '删除失败!'
+                message: '删除失败!',
               })
             }
           })
@@ -243,24 +243,38 @@ export default {
         .catch(() => {
           this.$message({
             type: 'info',
-            message: '已取消'
+            message: '已取消',
           })
         })
     },
-    handleRowEdit(value) {
-      console.log('sss', value)
-      this.orderForm = value
+    handleRowEdit(row) {
       this.dialogTitle = '修改租赁信息'
       this.dialogVisible = true
       this.formType = 1
       this.isAdd = false
+
+      let obj = {
+        bueCode: row.bueCode,
+        carCode: row.carCode,
+        carId: row.carId,
+        carName: row.carName,
+        careateUser: row.careateUser,
+        extInfo: row.extInfo || null,
+        rentDate: row.rentDate,
+        rentDuration: row.rentDuration,
+        rentMonery: row.rentMonery,
+        rentOrg: row.rentOrg,
+        rentUser: row.rentUser,
+        id: row.id,
+      }
+      this.orderForm = obj
     },
     handleRowDel(value) {
       this.$confirm('确认删除？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
-        center: true
+        center: true,
       })
         .then(() => {
           let param = {
@@ -269,19 +283,19 @@ export default {
             pageSize: this.pageSize,
             rentBeans: [value],
             rentIds: [],
-            searchText: ''
+            searchText: '',
           }
-          deleteRent(param).then(res => {
+          deleteRent(param).then((res) => {
             if (res.status === 200) {
               this.$message({
                 type: 'success',
-                message: '删除成功!'
+                message: '删除成功!',
               })
               this.getRent()
             } else {
               this.$message({
                 type: 'error',
-                message: '删除失败!'
+                message: '删除失败!',
               })
             }
           })
@@ -289,42 +303,46 @@ export default {
         .catch(() => {
           this.message({
             type: 'info',
-            message: '已取消'
+            message: '已取消',
           })
         })
     },
     addRent() {
       this.orderForm.carCode = ''
       this.orderForm.carName = ''
-      addRent(this.orderForm).then(res => {
+      addRent(this.orderForm).then((res) => {
         if (res.status === 200) {
           this.$message({
             type: 'success',
-            message: '添加成功'
+            message: '添加成功',
+          })
+          this.$nextTick(() => {
+            this.clearForm()
           })
           this.getRent()
           this.dialogVisible = false
         } else {
           this.$message({
             type: 'error',
-            message: '添加失败'
+            message: '添加失败',
           })
         }
       })
     },
     updateRent() {
-      updateRent(this.orderForm).then(res => {
+      updateRent(this.orderForm).then((res) => {
         if (res.status === 200) {
           if (res.status === 200) {
             this.$message({
               type: 'success',
-              message: '修改成功'
+              message: '修改成功',
             })
+            this.getRent()
             this.dialogVisible = false
           } else {
             this.$message({
               type: 'error',
-              message: '修改失败'
+              message: '修改失败',
             })
           }
         }
@@ -333,14 +351,14 @@ export default {
     confirmDialog() {
       if (this.formType === 0) {
         this.getRent({
-          carCode: this.form.carId,
-          pageNum: this.pageNum,
-          pageSize: this.pageSize,
-          searchText: this.form.id
+          carCode: this.form.carId || '',
+          pageNum: 1,
+          pageSize: 999,
+          searchText: this.form.id || '',
         })
         this.dialogVisible = false
       } else if (this.formType === 1) {
-        this.$refs.orderForm.validate(valid => {
+        this.$refs.orderForm.validate((valid) => {
           if (valid) {
             if (this.isAdd) {
               this.addRent()
@@ -361,12 +379,12 @@ export default {
       if (section.length > 0) this.delDisabled = false
       this.delArr = section
     },
-    handleSizeChange(value) {
-      this.pageSize = value
+    handleSizeChange(size) {
+      this.pageSize = size
       this.getRent()
     },
-    handleCurrentChange() {
-      this.pageNum ++
+    handleCurrentChange(page) {
+      this.pageNum = page
       this.getRent()
     },
     getOrderNo(value) {
@@ -384,8 +402,19 @@ export default {
           : date.getMonth() + 1
       let day = date.getDate() < 10 ? '0' + date.getDate() : date.getDate()
       return year + '-' + month + '-' + day
-    }
-  }
+    },
+    clearForm() {
+      this.orderForm.carCode = ''
+      this.orderForm.carId = ''
+      this.orderForm.carName = ''
+      this.orderForm.careateUser = ''
+      this.orderForm.rentDuration = ''
+      this.orderForm.rentMonery = ''
+      this.orderForm.rentOrg = ''
+      this.orderForm.rentUser = ''
+      this.orderForm.id = ''
+    },
+  },
 }
 </script>
 
