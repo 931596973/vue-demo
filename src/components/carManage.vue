@@ -1,9 +1,9 @@
 <template>
   <div>
     <el-container>
-      <el-aside class="left" style="border: 1px sold #cccccc">
-        <el-tree :props="props" :load="loadNode" lazy @node-click="handleNodeClick" ref="tree" node-key="id"
-          highlight-current>
+      <el-aside class="left">
+        <el-tree :props="props" :load="loadNode" lazy ref="tree" node-key="id" highlight-current
+          :default-expanded-keys="['00000000-0000-0000-0000-000000000000']" @node-click="handleNodeClick">
         </el-tree>
       </el-aside>
       <el-main>
@@ -18,7 +18,7 @@
           <el-button type="primary" size="small" :disabled="editCarDisable" @click="handleUpdateCar">修改车辆</el-button>
           <el-button type="primary" size="small" :disabled="delCarDisable" @click="handleDelCar">删除车辆</el-button>
         </div>
-        <el-table :data="tableData" tooltip-effect="dark" style="width: 100%" @select="selectRow"
+        <el-table :data="tableData" tooltip-effect="dark" style="width: 100%" height="700px" @select="selectRow"
           @select-all="selectAll">
           <el-table-column type="selection" width="55">
           </el-table-column>
@@ -45,10 +45,11 @@
         </el-table>
 
         <el-pagination class="pagination" @size-change="handleSizeChange" @current-change="handleCurrentChange"
-          :current-page="1" :page-sizes="[5, 10, 20, 30, 50]" :page-size="pageSize"
+          :current-page="pageNum" :page-sizes="[5, 10, 20, 30, 50]" :page-size="pageSize"
           layout="total, sizes, prev, pager, next, jumper" :total="total">
         </el-pagination>
       </el-main>
+
     </el-container>
 
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px">
@@ -59,7 +60,7 @@
         <el-form-item label="类型名称" :label-width="formLabelWidth" prop="carTypeName">
           <el-input v-model="form.carTypeName" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
         </el-form-item>
-        <el-form-item label="上级类型" :label-width="formLabelWidth">
+        <el-form-item label="上级类型" :label-width="formLabelWidth" prop="carTypeParent">
           <treeselect v-model="form.carTypeParent" :options="options" valueFormat="node" :load-options="loadOptions" />
         </el-form-item>
       </el-form>
@@ -113,13 +114,24 @@ import {
   updateCar,
   deleteCar,
 } from '../api.js'
+import { getFamateDate } from '../utils'
 
 export default {
   components: {
     Treeselect,
   },
+  watch: {
+    selection(selection) {
+      this.isDelCarDisable(selection)
+      this.isEditCarDisable(selection)
+    },
+  },
   mounted() {
     this.getCar()
+    // this.$nextTick(() => {
+    //   document.querySelector('.el-tree-node__content').click()
+    // })
+    console.log('tree', this.$refs.tree)
   },
   data() {
     return {
@@ -143,6 +155,9 @@ export default {
         ],
         carTypeName: [
           { required: true, message: '请输入车辆类型名称', trigger: 'blur' },
+        ],
+        carTypeParent: [
+          { required: true, message: '请选择上级类型', trigger: 'blur' },
         ],
       },
       carRules: {
@@ -207,6 +222,7 @@ export default {
       },
       selectTreeId: '',
       updateCartypeId: '',
+      selection: [],
     }
   },
   methods: {
@@ -226,8 +242,12 @@ export default {
       }
       getCar(param).then((res) => {
         if (res.status === 200) {
-          this.tableData = res.data.list
+          this.tableData = res.data.list.map((item) => {
+            item.carBuyTime = getFamateDate(item.carBuyTime)
+            return item
+          })
           this.total = res.data.total
+          this.selection = []
         }
       })
     },
@@ -320,12 +340,12 @@ export default {
             message: '添加成功',
           })
           this.dialogVisible = false
-          this.form.carTypeCode = ''
-          this.form.carTypeName = ''
+          this.$refs.form.resetFields()
           this.$refs.tree.append(res.data.data, res.data.data.carTypeParent)
+          this.$refs.tree.getNode(res.data.data.carTypeParent).loaded = false
+          this.$refs.tree.getNode(res.data.data.carTypeParent).expand()
           this.$refs.tree.setCurrentKey(res.data.data.id)
           this.nodeObj = this.$refs.tree.getCurrentNode()
-          console.log('sdfasdf', this.$refs.tree.getCurrentNode())
         } else {
           this.$message({
             type: 'error',
@@ -363,12 +383,12 @@ export default {
       updateCarType(param).then((res) => {
         if (res.data.status === 200) {
           this.refreshNode(param.carTypeParent)
-
           this.$message({
             type: 'success',
             message: '修改成功',
           })
           this.dialogVisible = false
+          this.$refs.form.resetFields()
         } else {
           this.$message({
             type: 'error',
@@ -378,6 +398,8 @@ export default {
       })
     },
     handleAddCar() {
+      document.querySelector('.car-tree').click()
+
       this.dialogVisible = true
       this.dialogTitle = '新增车辆信息'
       this.formType = 1
@@ -403,17 +425,7 @@ export default {
             message: '添加成功',
           })
           this.dialogVisible = false
-          this.carForm.carCode = ''
-          this.carForm.carName = ''
-          this.carForm.carNumber = ''
-          this.carForm.carBuyMonery = ''
-          this.carForm.carBuyTime = ''
-          // this.getCar({
-          //   cartypeId: this.nodeObj.id,
-          //   pageNum: this.pageNum,
-          //   pageSize: this.pageSize,
-          //   searchText: '',
-          // })
+          this.$refs.carForm.resetFields()
           this.getCar()
         } else {
           this.$message({
@@ -424,7 +436,6 @@ export default {
       })
     },
     handleRowEdit(row) {
-      console.log('row', row)
       this.nodeObj = row
       this.updateTypeObj = row
       this.updateCarId = row.id
@@ -479,8 +490,6 @@ export default {
           this.updateTypeObj.careTypeName || this.updateTypeObj.carTypeName,
         careTypeCode:
           this.updateTypeObj.careTypeCode || this.updateTypeObj.carTypeCode,
-        // careTypeId: this.updateTypeObj.id,
-        // careTypeId: this.updateTypeObj.careTypeId,
         careTypeId: this.updateCartypeId,
         id: this.updateCarId,
       }
@@ -539,12 +548,7 @@ export default {
     },
 
     selectRow(selection, row) {
-      console.log('row', row)
-      console.log('selection',selection)
-      selection.length === 1
-        ? (this.editCarDisable = false)
-        : (this.editCarDisable = true)
-      this.delCarDisable = this.isDelCarDisable(selection)
+      this.selection = selection
       this.delParam.carBeans = selection
       this.nodeObj = row
       this.updateTypeObj = row
@@ -553,7 +557,6 @@ export default {
     },
     selectAll(selection) {
       this.delParam.carBeans = selection
-      this.delCarDisable = this.isDelCarDisable(selection)
     },
     cancleDialog() {
       this.dialogVisible = false
@@ -607,7 +610,7 @@ export default {
       }
     },
     handleNodeClick(node) {
-      console.log('node', node)
+      console.log('node')
       this.selectTreeId = node.id
       this.nodeObj = node
       this.form.carTypeParent.id = node.carTypeParent
@@ -630,7 +633,6 @@ export default {
       })
     },
     handleTreeSelected(node) {
-      console.log('node',node)
       this.nodeObj = node
       this.updateTypeObj = node
       this.updateCartypeId = node.id
@@ -681,9 +683,6 @@ export default {
     isRended(data) {
       return data.some((item) => item.rentState === '已租赁')
     },
-    isDelCarDisable(selection){
-      return selection.some(item => item.rentState === '已租赁')
-    },
     getDelRowDisabled(rentState) {
       return rentState === '已租赁' ? true : false
     },
@@ -701,6 +700,24 @@ export default {
         this.$refs.tree.setCurrentKey(parentId)
       }
     },
+    isDelCarDisable(selection) {
+      if (selection.length === 0) {
+        this.delCarDisable = true
+      } else {
+        if (selection.some((item) => item.rentState === '已租赁')) {
+          this.delCarDisable = true
+        } else {
+          this.delCarDisable = false
+        }
+      }
+    },
+    isEditCarDisable(selection) {
+      if (selection.length === 1) {
+        this.editCarDisable = false
+      } else {
+        this.editCarDisable = true
+      }
+    },
   },
 }
 </script>
@@ -708,10 +725,10 @@ export default {
 <style scoped>
 .left {
   padding: 40px 0 0 40px;
-  border: 1px sold #cccccc !important;
-  border-left: none !important;
 }
 .pagination {
-  float: right;
+  position: fixed;
+  bottom: 40px;
+  right: 20px;
 }
 </style>

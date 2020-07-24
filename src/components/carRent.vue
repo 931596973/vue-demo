@@ -33,17 +33,17 @@
       </el-table-column>
     </el-table>
     <el-pagination class="pagination" @size-change="handleSizeChange" @current-change="handleCurrentChange"
-      :current-page="1" :page-sizes="[5, 10, 20, 30, 50]" :page-size="5"
+      :current-page.sync="pageNum" :page-sizes="[3,5, 10, 20, 30, 50]" :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper" :total="total">
     </el-pagination>
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px">
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px" @closed="handlClose">
       <el-form :model="form" ref="form" v-if="formType === 0">
         <el-form-item label="订单编号" :label-width="formLabelWidth">
           <el-input v-model="form.id" autocomplete="off" placeholder="请输入订单编号"></el-input>
         </el-form-item>
         <el-form-item label="车辆" :label-width="formLabelWidth">
           <el-select v-model="form.carId" placeholder="请选择车辆">
-            <el-option v-for="item in allCars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
+            <el-option v-for="item in cars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
               :value="item.id">
             </el-option>
           </el-select>
@@ -70,14 +70,14 @@
         <el-form-item label="租金" :label-width="formLabelWidth" prop="rentMonery">
           <el-input v-model.number="orderForm.rentMonery" autocomplete="off" placeholder="请输入租金"></el-input>
         </el-form-item>
-        <el-form-item label="出租时长（月）" :label-width="formLabelWidth" prop="rentDuration">
+        <el-form-item label="出租时长" :label-width="formLabelWidth" prop="rentDuration">
           <el-select v-model="orderForm.rentDuration" placeholder="请选择出租时长">
             <el-option v-for="item in rentTimes" :key="item.value" :label="item.label" :value="item.value">
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="车辆" :label-width="formLabelWidth">
-          <el-select v-model="orderForm.carId" placeholder="请选择车辆">
+        <el-form-item label="车辆" :label-width="formLabelWidth" prop="carId">
+          <el-select v-model="orderForm.carId" placeholder="请选择车辆" :disabled="selectCarDisable">
             <el-option v-for="item in cars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
               :value="item.id">
             </el-option>
@@ -88,7 +88,7 @@
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button @click="cancleDialog">取 消</el-button>
         <el-button type="primary" @click="confirmDialog">确 定</el-button>
       </span>
     </el-dialog>
@@ -97,6 +97,7 @@
 
 <script>
 import { getRent, updateRent, addRent, deleteRent, getCar } from '../api'
+import { getFamateDate } from '../utils'
 
 export default {
   mounted() {
@@ -118,6 +119,7 @@ export default {
         id: '',
         bueCode: '',
         rentDate: new Date(),
+        carId: '',
       },
       orderRules: {
         bueCode: [
@@ -138,13 +140,14 @@ export default {
         rentDuration: [
           { required: true, message: '请选择出租时长', trigger: 'blur' },
         ],
+        carId: [{ required: true, message: '请选择出租时长', trigger: 'blur' }],
         rentMonery: [
           { required: true, message: '请输入租金', trigger: 'change' },
           { type: 'number', message: '请输入数字', trigger: 'change' },
         ],
       },
       tableData: [],
-      dialogTitle: '查询',
+      dialogTitle: '',
       dialogVisible: false,
       formLabelWidth: '120px',
       rentTimes: [
@@ -154,6 +157,7 @@ export default {
       ],
       delArr: [],
       isAdd: true,
+      selectCarDisable: false,
     }
   },
   methods: {
@@ -166,10 +170,8 @@ export default {
       }
       getCar(param).then((res) => {
         if (res.status === 200) {
-          this.cars = res.data.list.filter(
-            (item) => item.rentState === '未租赁'
-          )
           this.allCars = res.data.list
+          this.cars = this.allCars
         }
       })
     },
@@ -189,7 +191,10 @@ export default {
       }
       getRent(param).then((res) => {
         if (res.status === 200) {
-          this.tableData = res.data.list
+          this.tableData = res.data.list.map((item) => {
+            item.rentDate = getFamateDate(item.rentDate)
+            return item
+          })
           this.total = res.data.total
         }
       })
@@ -200,14 +205,18 @@ export default {
     handleQuery() {
       this.dialogVisible = true
       this.formType = 0
+      this.dialogTitle = '查询'
+      this.cars = this.allCars.filter((item) => item.rentState === '已租赁')
     },
     handleAdd() {
       this.dialogVisible = true
+      this.selectCarDisable = false
       this.dialogTitle = '车辆租赁单新建'
       this.formType = 1
       this.orderForm.bueCode = this.getOrderNo(
-        this.getFamateDate(this.orderForm.rentDate)
+        getFamateDate(this.orderForm.rentDate)
       )
+      this.cars = this.allCars.filter((item) => item.rentState === '未租赁')
     },
     handleDel() {
       this.$confirm('确认删除?', '提示', {
@@ -232,6 +241,7 @@ export default {
                 message: '删除成功!',
               })
               this.getRent()
+              this.getCar()
             } else {
               this.$message({
                 type: 'error',
@@ -248,26 +258,28 @@ export default {
         })
     },
     handleRowEdit(row) {
+      console.log('row', row)
       this.dialogTitle = '修改租赁信息'
       this.dialogVisible = true
       this.formType = 1
       this.isAdd = false
-
-      let obj = {
-        bueCode: row.bueCode,
-        carCode: row.carCode,
-        carId: row.carId,
-        carName: row.carName,
-        careateUser: row.careateUser,
-        extInfo: row.extInfo || null,
-        rentDate: row.rentDate,
-        rentDuration: row.rentDuration,
-        rentMonery: row.rentMonery,
-        rentOrg: row.rentOrg,
-        rentUser: row.rentUser,
-        id: row.id,
-      }
-      this.orderForm = obj
+      this.cars = this.allCars
+      this.selectCarDisable = true
+      // let obj = {
+      //   bueCode: row.bueCode,
+      //   carCode: row.carCode,
+      //   carId: row.carId,
+      //   carName: row.carName,
+      //   careateUser: row.careateUser,
+      //   extInfo: row.extInfo || null,
+      //   rentDate: row.rentDate,
+      //   rentDuration: row.rentDuration,
+      //   rentMonery: row.rentMonery,
+      //   rentOrg: row.rentOrg,
+      //   rentUser: row.rentUser,
+      //   id: row.id,
+      // }
+      this.orderForm = row
     },
     handleRowDel(value) {
       this.$confirm('确认删除？', '提示', {
@@ -291,7 +303,9 @@ export default {
                 type: 'success',
                 message: '删除成功!',
               })
+              this.minusPageNum()
               this.getRent()
+              this.getCar()
             } else {
               this.$message({
                 type: 'error',
@@ -316,10 +330,10 @@ export default {
             type: 'success',
             message: '添加成功',
           })
-          this.$nextTick(() => {
-            this.clearForm()
-          })
+          this.getPageNumm()
           this.getRent()
+          this.getCar()
+          this.$refs.orderForm.resetFields()
           this.dialogVisible = false
         } else {
           this.$message({
@@ -338,6 +352,7 @@ export default {
               message: '修改成功',
             })
             this.getRent()
+            this.$refs.orderForm.resetFields()
             this.dialogVisible = false
           } else {
             this.$message({
@@ -352,8 +367,8 @@ export default {
       if (this.formType === 0) {
         this.getRent({
           carCode: this.form.carId || '',
-          pageNum: 1,
-          pageSize: 999,
+          pageNum: this.pageNum,
+          pageSize: this.pageSize,
           searchText: this.form.id || '',
         })
         this.dialogVisible = false
@@ -370,6 +385,11 @@ export default {
           }
         })
       }
+    },
+    cancleDialog() {
+      this.dialogVisible = false
+      this.$refs.orderForm.resetFields()
+      this.orderForm.rentOrg = ''
     },
     selectAll(selection) {
       this.delDisabled = false
@@ -393,27 +413,23 @@ export default {
       result = 'ZLD' + value.replace(/-/g, '') + flowNo
       return result
     },
-    getFamateDate(value) {
-      let date = new Date(value)
-      let year = date.getFullYear()
-      let month =
-        date.getMonth() + 1 < 10
-          ? '0' + (date.getMonth() + 1)
-          : date.getMonth() + 1
-      let day = date.getDate() < 10 ? '0' + date.getDate() : date.getDate()
-      return year + '-' + month + '-' + day
+    handlClose() {
+      // if (this.formType === 1) {
+      //   this.$refs.orderForm.resetFields()
+      //   console.log('sadf', this.orderForm)
+      // }
     },
-    clearForm() {
-      this.orderForm.carCode = ''
-      this.orderForm.carId = ''
-      this.orderForm.carName = ''
-      this.orderForm.careateUser = ''
-      this.orderForm.rentDuration = ''
-      this.orderForm.rentMonery = ''
-      this.orderForm.rentOrg = ''
-      this.orderForm.rentUser = ''
-      this.orderForm.id = ''
+    minusPageNum() {
+      if (this.total - this.pageSize * this.pageNum === 1) {
+        this.pageNum--
+      }
     },
+    getPageNumm(){
+      this.pageNum = Math.ceil((this.total+1)/this.pageSize)
+      console.log('sss',Math.ceil((this.total+1)/this.pageSize))
+      console.log('sss',this.pageNum)
+      debugger
+    }
   },
 }
 </script>
