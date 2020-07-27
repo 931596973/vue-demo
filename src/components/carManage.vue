@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="height:100%;overflow:hidden">
     <el-container>
       <el-aside class="left">
         <el-tree :props="props" :load="loadNode" lazy ref="tree" node-key="id" highlight-current
@@ -18,7 +18,7 @@
           <el-button type="primary" size="small" :disabled="editCarDisable" @click="handleUpdateCar">修改车辆</el-button>
           <el-button type="primary" size="small" :disabled="delCarDisable" @click="handleDelCar">删除车辆</el-button>
         </div>
-        <el-table :data="tableData" tooltip-effect="dark" style="width: 100%" height="700px" @select="selectRow"
+        <el-table :data="tableData" tooltip-effect="dark" style="width: 100%" :height="tableHeight" @select="selectRow"
           @select-all="selectAll">
           <el-table-column type="selection" width="55">
           </el-table-column>
@@ -61,7 +61,8 @@
           <el-input v-model="form.carTypeName" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
         </el-form-item>
         <el-form-item label="上级类型" :label-width="formLabelWidth" prop="carTypeParent">
-          <treeselect v-model="form.carTypeParent" :options="options" valueFormat="node" :load-options="loadOptions" />
+          <treeselect v-model="form.carTypeParent" ref="treeSelect" :options="options" valueFormat="node"
+            :load-options="loadOptions" @select="handleTreeSelected" />
         </el-form-item>
       </el-form>
       <el-form :model="carForm" :rules="carRules" ref="carForm" v-if="formType === 1">
@@ -126,15 +127,13 @@ export default {
       this.isEditCarDisable(selection)
     },
   },
-  mounted() {
+  created() {
+    this.getTableHeight()
     this.getCar()
-    // this.$nextTick(() => {
-    //   document.querySelector('.el-tree-node__content').click()
-    // })
-    console.log('tree', this.$refs.tree)
   },
   data() {
     return {
+      tableHeight: '',
       pageSize: 5,
       pageNum: 1,
       total: 0,
@@ -191,7 +190,8 @@ export default {
       ],
       formLabelWidth: '120px',
       form: {
-        id: '',
+        carTypeCode: '',
+        carTypeName: '',
         carTypeParent: {
           id: '00000000-0000-0000-0000-000000000000',
           label: '00 车辆品牌',
@@ -222,10 +222,19 @@ export default {
       },
       selectTreeId: '',
       updateCartypeId: '',
+      superCartypeId: '',
+      superParenttypeId: '',
       selection: [],
+      treeParentId: '',
     }
   },
   methods: {
+    getTableHeight() {
+      this.tableHeight = window.innerHeight - 237 + 'px'
+      window.onresize = (event) => {
+        this.tableHeight = event.currentTarget.innerHeight - 237 + 'px'
+      }
+    },
     getCar(
       { cartypeId, pageNum, pageSize, searchText } = {
         cartypeId: '00000000-0000-0000-0000-000000000000',
@@ -340,11 +349,15 @@ export default {
             message: '添加成功',
           })
           this.dialogVisible = false
+          this.editCarTypeDisable = true
           this.$refs.form.resetFields()
           this.$refs.tree.append(res.data.data, res.data.data.carTypeParent)
           this.$refs.tree.getNode(res.data.data.carTypeParent).loaded = false
           this.$refs.tree.getNode(res.data.data.carTypeParent).expand()
-          this.$refs.tree.setCurrentKey(res.data.data.id)
+          setTimeout(() => {
+            this.$refs.tree.setCurrentKey(res.data.data.id)
+          }, 500)
+
           this.nodeObj = this.$refs.tree.getCurrentNode()
         } else {
           this.$message({
@@ -359,35 +372,33 @@ export default {
       this.dialogTitle = '修改车辆类型'
       this.formType = 0
       this.isAdd = false
-      let obj = {
-        carTypeCode: '',
-        carTypeName: '',
-        carTypeParent: {
-          id: '',
-          label: '',
-        },
-      }
-      obj.carTypeCode = this.nodeObj.carTypeCode
-      obj.carTypeName = this.nodeObj.carTypeName
-      obj.carTypeParent.id = this.nodeObj.carTypeParent
-      obj.carTypeParent.label = this.nodeObj.carParentName
-      this.form = obj
+      this.form.carTypeCode = this.nodeObj.carTypeCode
+      this.form.carTypeName = this.nodeObj.carTypeName
+      // setTimeout(() => {
+      //   this.form.carTypeParent.id = this.nodeObj.carTypeParent
+      //   this.form.carTypeParent.label = this.nodeObj.carParentName
+      // }, 1000)
+
+      this.$nextTick(() => {
+        console.log('asdfasdf', this.$refs.treeSelect.getNode())
+      })
     },
     updateCarType() {
       let param = {
         carTypeCode: this.form.carTypeCode,
         carTypeName: this.form.carTypeName,
-        carTypeParent: this.nodeObj.carTypeParent,
-        id: this.nodeObj.id,
+        carTypeParent: this.superParenttypeId,
+        id: this.superCartypeId,
       }
       updateCarType(param).then((res) => {
         if (res.data.status === 200) {
-          this.refreshNode(param.carTypeParent)
           this.$message({
             type: 'success',
             message: '修改成功',
           })
+          this.refreshNode(param.carTypeParent)
           this.dialogVisible = false
+          this.editCarTypeDisable = true
           this.$refs.form.resetFields()
         } else {
           this.$message({
@@ -398,8 +409,7 @@ export default {
       })
     },
     handleAddCar() {
-      document.querySelector('.car-tree').click()
-
+      // document.querySelector('.car-tree').click()
       this.dialogVisible = true
       this.dialogTitle = '新增车辆信息'
       this.formType = 1
@@ -560,25 +570,30 @@ export default {
     },
     cancleDialog() {
       this.dialogVisible = false
-      this.form = {
-        id: '',
-        carTypeParent: {
-          id: '00000000-0000-0000-0000-000000000000',
-          label: '00 车辆品牌',
-        },
+      // this.form = {
+      //   id: '',
+      //   carTypeParent: {
+      //     id: '00000000-0000-0000-0000-000000000000',
+      //     label: '00 车辆品牌',
+      //   },
+      // }
+      if (this.formType === 0) {
+        this.$refs.form.resetFields()
+      } else {
+        this.$refs.carForm.resetFields()
       }
-      this.carForm = {
-        rentState: '未租赁',
-        careType: {
-          id: '00000000-0000-0000-0000-000000000000',
-          label: '00 车辆品牌',
-        },
-        carBuyMonery: '',
-        carBuyTime: '',
-        carCode: '',
-        carName: '',
-        carNumber: '',
-      }
+      // this.carForm = {
+      //   rentState: '未租赁',
+      //   careType: {
+      //     id: '00000000-0000-0000-0000-000000000000',
+      //     label: '00 车辆品牌',
+      //   },
+      //   carBuyMonery: '',
+      //   carBuyTime: '',
+      //   carCode: '',
+      //   carName: '',
+      //   carNumber: '',
+      // }
     },
     confirmDialog() {
       // 车辆类型
@@ -610,14 +625,19 @@ export default {
       }
     },
     handleNodeClick(node) {
-      console.log('node')
+      console.log('node', node)
       this.selectTreeId = node.id
       this.nodeObj = node
-      this.form.carTypeParent.id = node.carTypeParent
-      this.form.carTypeParent.label = node.carParentName
+      this.superCartypeId = node.id
+      this.superParenttypeId = node.carTypeParent
+      this.treeParentId = node.carTypeParent
+      // setTimeout(() => {
+      //   this.form.carTypeParent.id = node.carTypeParent
+      //   this.form.carTypeParent.label = node.carParentName
+      // }, 1000)
+
       this.carForm.careType.id = node.id
       this.carForm.careType.label = node.carTypeName
-      this.carForm
       this.editCarTypeDisable = false
       getCar({
         cartypeId: this.nodeObj.id,
@@ -632,12 +652,19 @@ export default {
         }
       })
     },
+    handleTypeTreeSelected() {},
     handleTreeSelected(node) {
+      this.form.carTypeParent = {
+        id: node.id,
+        label: node.label,
+      }
+      console.log('node', node)
       this.nodeObj = node
       this.updateTypeObj = node
-      this.updateCartypeId = node.id
+      this.superParenttypeId = node.id
     },
     loadOptions({ action, parentNode, callback }) {
+      console.log('parentNode', parentNode)
       if (action === LOAD_CHILDREN_OPTIONS) {
         getCarType(parentNode).then((res) => {
           if (res.data.status === 200) {
@@ -688,6 +715,11 @@ export default {
     },
     refreshNode(id) {
       let node = this.$refs.tree.getNode(id)
+      console.log('treenode', node)
+
+      if (id !== this.treeParentId) {
+        this.$refs.tree.remove(this.selectTreeId)
+      }
       node.loaded = false
       node.expand()
     },
@@ -696,7 +728,19 @@ export default {
       let ids = parent.childNodes.map((item) => item.data.id)
       if (ids.length !== 0) {
         this.$refs.tree.setCurrentKey(ids[0])
+        this.getCar({
+          cartypeId: ids[0],
+          pageNum: this.pageNum,
+          pageSize: this.pageSize,
+          searchText: '',
+        })
       } else {
+        this.getCar({
+          cartypeId: parentId,
+          pageNum: this.pageNum,
+          pageSize: this.pageSize,
+          searchText: '',
+        })
         this.$refs.tree.setCurrentKey(parentId)
       }
     },

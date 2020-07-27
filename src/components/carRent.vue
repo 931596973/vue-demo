@@ -5,8 +5,8 @@
       <el-button type="primary" size="small" @click="handleAdd">新建</el-button>
       <el-button type="primary" size="small" @click="handleDel" :disabled="delDisabled">删除</el-button>
     </div>
-    <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" @select-all="selectAll"
-      @select="selectRow">
+    <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" :height="tableHeight"
+      @select-all="selectAll" @select="selectRow">
       <el-table-column type="selection" width="55">
       </el-table-column>
       <el-table-column prop="bueCode" label="订单编号" :show-overflow-tooltip="true">
@@ -100,12 +100,21 @@ import { getRent, updateRent, addRent, deleteRent, getCar } from '../api'
 import { getFamateDate } from '../utils'
 
 export default {
-  mounted() {
+  watch: {
+    delArr() {
+      this.delArr.length === 0
+        ? (this.delDisabled = true)
+        : (this.delDisabled = false)
+    },
+  },
+  created() {
+    this.getTableHeight()
     this.getCar()
     this.getRent()
   },
   data() {
     return {
+      tableHeight: '',
       pageNum: 1,
       pageSize: 5,
       total: 0,
@@ -161,6 +170,12 @@ export default {
     }
   },
   methods: {
+    getTableHeight() {
+      this.tableHeight = window.innerHeight - 237
+      window.onresize = (event) => {
+        this.tableHeight = event.currentTarget.innerHeight - 237
+      }
+    },
     getCar() {
       let param = {
         cartypeId: '00000000-0000-0000-0000-000000000000',
@@ -240,7 +255,19 @@ export default {
                 type: 'success',
                 message: '删除成功!',
               })
-              this.getRent()
+              // this.delArr.forEach(item => {
+              //   this.tableData.forEach((one, index) => {
+              //     if (item.id === one.id) {
+              //       this.tableData.splice(index, 1)
+              //     }
+              //   })
+              // })
+              this.getRent({
+                carCode: '',
+                pageNum: 1,
+                pageSize: this.pageSize,
+                searchText: '',
+              })
               this.getCar()
             } else {
               this.$message({
@@ -265,23 +292,10 @@ export default {
       this.isAdd = false
       this.cars = this.allCars
       this.selectCarDisable = true
-      // let obj = {
-      //   bueCode: row.bueCode,
-      //   carCode: row.carCode,
-      //   carId: row.carId,
-      //   carName: row.carName,
-      //   careateUser: row.careateUser,
-      //   extInfo: row.extInfo || null,
-      //   rentDate: row.rentDate,
-      //   rentDuration: row.rentDuration,
-      //   rentMonery: row.rentMonery,
-      //   rentOrg: row.rentOrg,
-      //   rentUser: row.rentUser,
-      //   id: row.id,
-      // }
       this.orderForm = row
     },
-    handleRowDel(value) {
+    handleRowDel(value, index) {
+      console.log('value', value)
       this.$confirm('确认删除？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -303,8 +317,9 @@ export default {
                 type: 'success',
                 message: '删除成功!',
               })
-              this.minusPageNum()
-              this.getRent()
+              this.tableData.splice(index, 1)
+              // this.minusPageNum()
+              // this.getRent()
               this.getCar()
             } else {
               this.$message({
@@ -330,7 +345,7 @@ export default {
             type: 'success',
             message: '添加成功',
           })
-          this.getPageNumm()
+          // this.getPageNumm()
           this.getRent()
           this.getCar()
           this.$refs.orderForm.resetFields()
@@ -386,18 +401,24 @@ export default {
         })
       }
     },
+    clearForm() {
+      this.orderForm = {
+        id: '',
+        bueCode: '',
+        rentDate: new Date(),
+        carId: '',
+      }
+      this.$refs.orderForm.resetFields()
+    },
     cancleDialog() {
       this.dialogVisible = false
-      this.$refs.orderForm.resetFields()
-      this.orderForm.rentOrg = ''
+      this.clearForm()
     },
     selectAll(selection) {
-      this.delDisabled = false
       this.delArr = selection
     },
-    selectRow(section, row) {
-      if (section.length > 0) this.delDisabled = false
-      this.delArr = section
+    selectRow(selection, row) {
+      this.delArr = selection
     },
     handleSizeChange(size) {
       this.pageSize = size
@@ -414,28 +435,26 @@ export default {
       return result
     },
     handlClose() {
-      // if (this.formType === 1) {
-      //   this.$refs.orderForm.resetFields()
-      //   console.log('sadf', this.orderForm)
-      // }
+      this.clearForm()
     },
-    minusPageNum() {
-      if (this.total - this.pageSize * this.pageNum === 1) {
-        this.pageNum--
-      }
+    // minusPageNum() {
+    //   if (this.total - this.pageSize * this.pageNum === 1) {
+    //     this.pageNum--
+    //   }
+    // },
+    getPageNumm() {
+      this.pageNum = Math.ceil((this.total + 1) / this.pageSize)
+      console.log('sss', Math.ceil((this.total + 1) / this.pageSize))
+      console.log('sss', this.pageNum)
     },
-    getPageNumm(){
-      this.pageNum = Math.ceil((this.total+1)/this.pageSize)
-      console.log('sss',Math.ceil((this.total+1)/this.pageSize))
-      console.log('sss',this.pageNum)
-      debugger
-    }
   },
 }
 </script>
 
 <style scoped>
 .pagination {
-  float: right;
+  position: fixed;
+  bottom: 40px;
+  right: 20px;
 }
 </style>
