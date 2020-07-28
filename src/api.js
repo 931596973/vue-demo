@@ -1,5 +1,12 @@
 import request from './request'
 
+export function getParentCarType({ id, carTypeName, carTypeCode, carTypeParent }) {
+  return request({
+    url: `/api/getParentCarType?id=${id}&carTypeName=${carTypeName}&carTypeCode=${carTypeCode}&carTypeParent=${carTypeParent}`,
+    method: 'GET'
+  })
+}
+
 export function getCarType({ id, carTypeName, carTypeCode }) {
   return request({
     url: `/api/getCarType?id=${id}&carTypeName=${carTypeName}&carTypeCode=${carTypeCode}`,

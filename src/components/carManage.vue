@@ -8,7 +8,7 @@
       </el-aside>
       <el-main>
         <h3>车辆管理</h3>
-        <div class="btn-wrap">
+        <div>
           <el-button type="primary" size="small" @click="handleAddCarType">新增车辆类型</el-button>
           <el-button type="primary" size="small" :disabled="editCarTypeDisable" @click="handleUpdateCarType">修改车辆类型
           </el-button>
@@ -43,16 +43,15 @@
             </template>
           </el-table-column>
         </el-table>
-
         <el-pagination class="pagination" @size-change="handleSizeChange" @current-change="handleCurrentChange"
           :current-page="pageNum" :page-sizes="[5, 10, 20, 30, 50]" :page-size="pageSize"
           layout="total, sizes, prev, pager, next, jumper" :total="total">
         </el-pagination>
       </el-main>
-
     </el-container>
 
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px">
+    <el-dialog custom-class="abow_dialog" :title="dialogTitle" :visible.sync="dialogVisible" width="600px"
+      @close="cancleDialog">
       <el-form :model="form" :rules="rules" ref="form" v-if="formType === 0">
         <el-form-item label="类型编码" :label-width="formLabelWidth" prop="carTypeCode">
           <el-input v-model="form.carTypeCode" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
@@ -106,6 +105,7 @@ import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
 import {
+  getParentCarType,
   getCarType,
   updateCarType,
   addCarType,
@@ -183,8 +183,6 @@ export default {
         {
           id: '00000000-0000-0000-0000-000000000000',
           label: '00 车辆品牌',
-          carTypeName: '车辆类型',
-          carTypeCode: '00',
           children: null,
         },
       ],
@@ -195,6 +193,7 @@ export default {
         carTypeParent: {
           id: '00000000-0000-0000-0000-000000000000',
           label: '00 车辆品牌',
+          children: null,
         },
       },
       carForm: {
@@ -368,20 +367,32 @@ export default {
       })
     },
     handleUpdateCarType() {
-      this.dialogVisible = true
       this.dialogTitle = '修改车辆类型'
       this.formType = 0
       this.isAdd = false
       this.form.carTypeCode = this.nodeObj.carTypeCode
       this.form.carTypeName = this.nodeObj.carTypeName
-      // setTimeout(() => {
-      //   this.form.carTypeParent.id = this.nodeObj.carTypeParent
-      //   this.form.carTypeParent.label = this.nodeObj.carParentName
-      // }, 1000)
+      this.dialogVisible = true
+      // this.$nextTick(() => {
+      // this.form.carTypeParent.id = this.nodeObj.carTypeParent
+      // this.form.carTypeParent.label = this.nodeObj.carParentName
+      // })
 
-      this.$nextTick(() => {
-        console.log('asdfasdf', this.$refs.treeSelect.getNode())
-      })
+      // }, 2000)
+      // this.options = [
+      //   {
+      //     id: '00000000-0000-0000-0000-000000000000',
+      //     label: '00 车辆品牌',
+      //     children: null,
+      //   },
+      // ]
+
+      // this.$nextTick(() => {
+      //   console.log(
+      //     'asdfasdf',
+      //     this.$refs.treeSelect.getNode('00000000-0000-0000-0000-000000000000')
+      //   )
+      // })
     },
     updateCarType() {
       let param = {
@@ -399,6 +410,7 @@ export default {
           this.refreshNode(param.carTypeParent)
           this.dialogVisible = false
           this.editCarTypeDisable = true
+          this.delCarTypeDisable = true
           this.$refs.form.resetFields()
         } else {
           this.$message({
@@ -570,30 +582,33 @@ export default {
     },
     cancleDialog() {
       this.dialogVisible = false
-      // this.form = {
-      //   id: '',
-      //   carTypeParent: {
-      //     id: '00000000-0000-0000-0000-000000000000',
-      //     label: '00 车辆品牌',
-      //   },
-      // }
+
       if (this.formType === 0) {
         this.$refs.form.resetFields()
+        this.form = {
+          carTypeCode: '',
+          carTypeName: '',
+          carTypeParent: {
+            id: '00000000-0000-0000-0000-000000000000',
+            label: '00 车辆品牌',
+            children: null,
+          },
+        }
       } else {
         this.$refs.carForm.resetFields()
+        this.carForm = {
+          rentState: '未租赁',
+          careType: {
+            id: '00000000-0000-0000-0000-000000000000',
+            label: '00 车辆品牌',
+          },
+          carBuyMonery: '',
+          carBuyTime: '',
+          carCode: '',
+          carName: '',
+          carNumber: '',
+        }
       }
-      // this.carForm = {
-      //   rentState: '未租赁',
-      //   careType: {
-      //     id: '00000000-0000-0000-0000-000000000000',
-      //     label: '00 车辆品牌',
-      //   },
-      //   carBuyMonery: '',
-      //   carBuyTime: '',
-      //   carCode: '',
-      //   carName: '',
-      //   carNumber: '',
-      // }
     },
     confirmDialog() {
       // 车辆类型
@@ -626,11 +641,31 @@ export default {
     },
     handleNodeClick(node) {
       console.log('node', node)
+      // getParentCarType(node).then((res) => {
+      // if (res.data.status === 200) {
+      // let id = res.data.data.pop()
+      // if (this.$refs.treeSelect) {
+      // this.form.carTypeParent = this.$refs.treeSelect.getNode(id)
+      // } else {
+      // this.form.carTypeParent.id = node.carTypeParent
+      // }
+      // }
+      // })
+      // this.form.carTypeParent = node
+      // this.form.carTypeParent.label = node.carParentName
       this.selectTreeId = node.id
       this.nodeObj = node
       this.superCartypeId = node.id
       this.superParenttypeId = node.carTypeParent
       this.treeParentId = node.carTypeParent
+
+      // this.options = [
+      //   {
+      //     id: '00000000-0000-0000-0000-000000000000',
+      //     label: '00 车辆品牌',
+      //     children: null,
+      //   },
+      // ]
       // setTimeout(() => {
       //   this.form.carTypeParent.id = node.carTypeParent
       //   this.form.carTypeParent.label = node.carParentName
@@ -652,7 +687,6 @@ export default {
         }
       })
     },
-    handleTypeTreeSelected() {},
     handleTreeSelected(node) {
       this.form.carTypeParent = {
         id: node.id,
@@ -664,13 +698,13 @@ export default {
       this.superParenttypeId = node.id
     },
     loadOptions({ action, parentNode, callback }) {
-      console.log('parentNode', parentNode)
       if (action === LOAD_CHILDREN_OPTIONS) {
         getCarType(parentNode).then((res) => {
           if (res.data.status === 200) {
             parentNode.children = res.data.data.map((item) => {
               item.label = item.carTypeName
               item.children = null
+
               return item
             })
             callback()
@@ -715,8 +749,6 @@ export default {
     },
     refreshNode(id) {
       let node = this.$refs.tree.getNode(id)
-      console.log('treenode', node)
-
       if (id !== this.treeParentId) {
         this.$refs.tree.remove(this.selectTreeId)
       }
@@ -728,6 +760,7 @@ export default {
       let ids = parent.childNodes.map((item) => item.data.id)
       if (ids.length !== 0) {
         this.$refs.tree.setCurrentKey(ids[0])
+        this.nodeObj = this.$refs.tree.getNode(ids[0])
         this.getCar({
           cartypeId: ids[0],
           pageNum: this.pageNum,
@@ -742,6 +775,7 @@ export default {
           searchText: '',
         })
         this.$refs.tree.setCurrentKey(parentId)
+        this.nodeObj = this.$refs.tree.getNode(parentId)
       }
     },
     isDelCarDisable(selection) {
@@ -774,5 +808,47 @@ export default {
   position: fixed;
   bottom: 40px;
   right: 20px;
+}
+
+/* .abow_dialog {
+  display: flex;
+  justify-content: center;
+  align-items: Center;
+  overflow: hidden;
+}
+.abow_dialog .el-dialog {
+  margin: 0 auto !important;
+  height: 90%;
+  overflow: hidden;
+}
+.abow_dialog .el-dialog .el-dialog__body {
+  position: absolute;
+  left: 0;
+  top: 54px;
+  bottom: 0;
+  right: 0;
+  padding: 0;
+  z-index: 1;
+  overflow: hidden;
+  overflow-y: auto;
+} */
+.abow_dialog /deep/ .el-dialog {
+  position: relative;
+  margin: 0 auto 0px;
+  background: #ffffff;
+  border-radius: 2px;
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  width: 50%;
+  height: 60%;
+}
+.el-dialog__body {
+  border-top: 1px solid #dcdfe6;
+  border-bottom: 1px solid #dcdfe6;
+  max-height: 85% !important;
+  min-height: 70%;
+  overflow-y: auto;
 }
 </style>

@@ -5,7 +5,7 @@
       <el-button type="primary" size="small" @click="handleAdd">新建</el-button>
       <el-button type="primary" size="small" @click="handleDel" :disabled="delDisabled">删除</el-button>
     </div>
-    <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" :height="tableHeight"
+    <el-table ref="table" :data="tableData" tooltip-effect="dark" style="width: 100%" :height="tableHeight"
       @select-all="selectAll" @select="selectRow">
       <el-table-column type="selection" width="55">
       </el-table-column>
@@ -171,9 +171,10 @@ export default {
   },
   methods: {
     getTableHeight() {
-      this.tableHeight = window.innerHeight - 237
+      this.tableHeight = window.innerHeight - 160
       window.onresize = (event) => {
-        this.tableHeight = event.currentTarget.innerHeight - 237
+        this.tableHeight = event.currentTarget.innerHeight - 160
+        this.$refs.table.doLayout()
       }
     },
     getCar() {
@@ -224,6 +225,7 @@ export default {
       this.cars = this.allCars.filter((item) => item.rentState === '已租赁')
     },
     handleAdd() {
+      this.isAdd = true
       this.dialogVisible = true
       this.selectCarDisable = false
       this.dialogTitle = '车辆租赁单新建'
@@ -318,6 +320,7 @@ export default {
                 message: '删除成功!',
               })
               this.tableData.splice(index, 1)
+              this.total --
               // this.minusPageNum()
               // this.getRent()
               this.getCar()
@@ -402,12 +405,16 @@ export default {
       }
     },
     clearForm() {
-      this.orderForm = {
-        id: '',
-        bueCode: '',
-        rentDate: new Date(),
-        carId: '',
+
+      if (!this.isAdd) {
+        this.orderForm = {
+          id: '',
+          bueCode: '',
+          rentDate: new Date(),
+          carId: '',
+        }
       }
+
       this.$refs.orderForm.resetFields()
     },
     cancleDialog() {
