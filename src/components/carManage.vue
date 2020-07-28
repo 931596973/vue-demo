@@ -52,50 +52,53 @@
 
     <el-dialog custom-class="abow_dialog" :title="dialogTitle" :visible.sync="dialogVisible" width="600px"
       @close="cancleDialog">
-      <el-form :model="form" :rules="rules" ref="form" v-if="formType === 0">
-        <el-form-item label="类型编码" :label-width="formLabelWidth" prop="carTypeCode">
-          <el-input v-model="form.carTypeCode" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
-        </el-form-item>
-        <el-form-item label="类型名称" :label-width="formLabelWidth" prop="carTypeName">
-          <el-input v-model="form.carTypeName" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
-        </el-form-item>
-        <el-form-item label="上级类型" :label-width="formLabelWidth" prop="carTypeParent">
-          <treeselect v-model="form.carTypeParent" ref="treeSelect" :options="options" valueFormat="node"
-            :load-options="loadOptions" @select="handleTreeSelected" />
-        </el-form-item>
-      </el-form>
-      <el-form :model="carForm" :rules="carRules" ref="carForm" v-if="formType === 1">
-        <el-form-item label="车辆编码" :label-width="formLabelWidth" prop="carCode">
-          <el-input v-model="carForm.carCode" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
-        </el-form-item>
-        <el-form-item label="车辆名称" :label-width="formLabelWidth" prop="carName">
-          <el-input v-model="carForm.carName" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
-        </el-form-item>
-        <el-form-item label="车牌号" :label-width="formLabelWidth" prop="carNumber">
-          <el-input v-model="carForm.carNumber" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
-        </el-form-item>
-        <el-form-item label="购买日期" :label-width="formLabelWidth" prop="carBuyTime">
-          <el-date-picker v-model="carForm.carBuyTime" type="date" placeholder="请选择购买日期">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="购买价格" :label-width="formLabelWidth" prop="carBuyMonery">
-          <el-input v-model.number="carForm.carBuyMonery" autocomplete="off" placeholder="请输入车辆价格"></el-input>
-        </el-form-item>
-        <el-form-item label="租赁状态" :label-width="formLabelWidth">
-          <el-radio-group v-model="carForm.rentState">
-            <el-radio label="已租赁" disabled>已租赁</el-radio>
-            <el-radio label="未租赁" disabled>未租赁</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="车辆类型" :label-width="formLabelWidth" prop="careType">
-          <treeselect v-model="carForm.careType" :options="options" valueFormat="node" :load-options="loadOptions"
-            @select="handleTreeSelected" />
-        </el-form-item>
-      </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="cancleDialog">取 消</el-button>
-        <el-button type="primary" @click="confirmDialog">确 定</el-button>
-      </span>
+      <div class="el-dialog-div">
+        <el-form :model="form" :rules="rules" ref="form" v-if="formType === 0">
+          <el-form-item label="类型编码" :label-width="formLabelWidth" prop="carTypeCode">
+            <el-input v-model="form.carTypeCode" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
+          </el-form-item>
+          <el-form-item label="类型名称" :label-width="formLabelWidth" prop="carTypeName">
+            <el-input v-model="form.carTypeName" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
+          </el-form-item>
+          <el-form-item label="上级类型" :label-width="formLabelWidth" prop="carTypeParent">
+            <treeselect v-model="form.carTypeParent" ref="treeSelect" :options="options" valueFormat="node"
+              :load-options="loadOptions" @select="handleTreeSelected" />
+          </el-form-item>
+        </el-form>
+        <el-form :model="carForm" :rules="carRules" ref="carForm" v-if="formType === 1">
+          <el-form-item label="车辆编码" :label-width="formLabelWidth" prop="carCode">
+            <el-input v-model="carForm.carCode" autocomplete="off" placeholder="请输入车辆类型编码"></el-input>
+          </el-form-item>
+          <el-form-item label="车辆名称" :label-width="formLabelWidth" prop="carName">
+            <el-input v-model="carForm.carName" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
+          </el-form-item>
+          <el-form-item label="车牌号" :label-width="formLabelWidth" prop="carNumber">
+            <el-input v-model="carForm.carNumber" autocomplete="off" placeholder="请输入车辆类型名称"></el-input>
+          </el-form-item>
+          <el-form-item label="购买日期" :label-width="formLabelWidth" prop="carBuyTime">
+            <el-date-picker v-model="carForm.carBuyTime" type="date" placeholder="请选择购买日期">
+            </el-date-picker>
+          </el-form-item>
+          <el-form-item label="购买价格" :label-width="formLabelWidth" prop="carBuyMonery">
+            <el-input v-model.number="carForm.carBuyMonery" autocomplete="off" placeholder="请输入车辆价格"></el-input>
+          </el-form-item>
+          <el-form-item label="租赁状态" :label-width="formLabelWidth">
+            <el-radio-group v-model="carForm.rentState">
+              <el-radio label="已租赁" disabled>已租赁</el-radio>
+              <el-radio label="未租赁" disabled>未租赁</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="车辆类型" :label-width="formLabelWidth" prop="careType">
+            <treeselect v-model="carForm.careType" :options="options" valueFormat="node" :load-options="loadOptions"
+              @select="handleTreeSelected" />
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="cancleDialog">取 消</el-button>
+          <el-button type="primary" @click="confirmDialog">确 定</el-button>
+        </div>
+      </div>
+
     </el-dialog>
   </div>
 </template>
@@ -232,6 +235,9 @@ export default {
       this.tableHeight = window.innerHeight - 237 + 'px'
       window.onresize = (event) => {
         this.tableHeight = event.currentTarget.innerHeight - 237 + 'px'
+        if (this.dialogVisible) {
+          document.querySelector('.el-dialog-div').style.maxHeight = '50vh'
+        }
       }
     },
     getCar(
@@ -264,7 +270,6 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
-        center: true,
       })
         .then(() => {
           this.delParam.carBeans = [value]
@@ -295,7 +300,6 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
-        center: true,
       })
         .then(() => {
           deleteCar(this.delParam).then((res) => {
@@ -536,7 +540,6 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
-        center: true,
       })
         .then(() => {
           this.delParam.carBeans = [...this.tableData]
@@ -658,19 +661,6 @@ export default {
       this.superCartypeId = node.id
       this.superParenttypeId = node.carTypeParent
       this.treeParentId = node.carTypeParent
-
-      // this.options = [
-      //   {
-      //     id: '00000000-0000-0000-0000-000000000000',
-      //     label: '00 车辆品牌',
-      //     children: null,
-      //   },
-      // ]
-      // setTimeout(() => {
-      //   this.form.carTypeParent.id = node.carTypeParent
-      //   this.form.carTypeParent.label = node.carParentName
-      // }, 1000)
-
       this.carForm.careType.id = node.id
       this.carForm.careType.label = node.carTypeName
       this.editCarTypeDisable = false
@@ -809,46 +799,11 @@ export default {
   bottom: 40px;
   right: 20px;
 }
-
-/* .abow_dialog {
-  display: flex;
-  justify-content: center;
-  align-items: Center;
-  overflow: hidden;
+.el-dialog-div {
+  max-height: 50vh;
+  overflow: auto;
 }
-.abow_dialog .el-dialog {
-  margin: 0 auto !important;
-  height: 90%;
-  overflow: hidden;
-}
-.abow_dialog .el-dialog .el-dialog__body {
-  position: absolute;
-  left: 0;
-  top: 54px;
-  bottom: 0;
-  right: 0;
-  padding: 0;
-  z-index: 1;
-  overflow: hidden;
-  overflow-y: auto;
-} */
-.abow_dialog /deep/ .el-dialog {
-  position: relative;
-  margin: 0 auto 0px;
-  background: #ffffff;
-  border-radius: 2px;
-  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  width: 50%;
-  height: 60%;
-}
-.el-dialog__body {
-  border-top: 1px solid #dcdfe6;
-  border-bottom: 1px solid #dcdfe6;
-  max-height: 85% !important;
-  min-height: 70%;
-  overflow-y: auto;
+.dialog-footer {
+  text-align: center;
 }
 </style>

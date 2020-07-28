@@ -36,61 +36,65 @@
       :current-page.sync="pageNum" :page-sizes="[3,5, 10, 20, 30, 50]" :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper" :total="total">
     </el-pagination>
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px" @closed="handlClose">
-      <el-form :model="form" ref="form" v-if="formType === 0">
-        <el-form-item label="订单编号" :label-width="formLabelWidth">
-          <el-input v-model="form.id" autocomplete="off" placeholder="请输入订单编号"></el-input>
-        </el-form-item>
-        <el-form-item label="车辆" :label-width="formLabelWidth">
-          <el-select v-model="form.carId" placeholder="请选择车辆">
-            <el-option v-for="item in cars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
-              :value="item.id">
-            </el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <el-form :model="orderForm" ref="orderForm" :rules="orderRules" v-if="formType === 1">
-        <el-form-item label="订单编号" :label-width="formLabelWidth" prop="bueCode">
-          <el-input v-model="orderForm.bueCode" autocomplete="off" readonly></el-input>
-        </el-form-item>
-        <el-form-item label="制单人" :label-width="formLabelWidth" prop="careateUser">
-          <el-input v-model="orderForm.careateUser" autocomplete="off" placeholder="请输入制单人"></el-input>
-        </el-form-item>
-        <el-form-item label="出租日期" :label-width="formLabelWidth" prop="rentDate">
-          <el-date-picker v-model="orderForm.rentDate" type="date" placeholder="请选择出租日期时间" value-format="yyyy-MM-dd"
-            @change="handleDateChange">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="租赁单位" :label-width="formLabelWidth" prop="rentOrg">
-          <el-input v-model="orderForm.rentOrg" autocomplete="off" placeholder="请输入租赁单位"></el-input>
-        </el-form-item>
-        <el-form-item label="承建人" :label-width="formLabelWidth" prop="rentUser">
-          <el-input v-model="orderForm.rentUser" autocomplete="off" placeholder="请输入承建人"></el-input>
-        </el-form-item>
-        <el-form-item label="租金" :label-width="formLabelWidth" prop="rentMonery">
-          <el-input v-model.number="orderForm.rentMonery" autocomplete="off" placeholder="请输入租金"></el-input>
-        </el-form-item>
-        <el-form-item label="出租时长" :label-width="formLabelWidth" prop="rentDuration">
-          <el-select v-model="orderForm.rentDuration" placeholder="请选择出租时长">
-            <el-option v-for="item in rentTimes" :key="item.value" :label="item.label" :value="item.value">
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="车辆" :label-width="formLabelWidth" prop="carId">
-          <el-select v-model="orderForm.carId" placeholder="请选择车辆" :disabled="selectCarDisable">
-            <el-option v-for="item in cars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
-              :value="item.id">
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="备注" :label-width="formLabelWidth">
-          <el-input v-model="orderForm.extInfo" autocomplete="off" placeholder="请输入备注"></el-input>
-        </el-form-item>
-      </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="cancleDialog">取 消</el-button>
-        <el-button type="primary" @click="confirmDialog">确 定</el-button>
-      </span>
+    <el-dialog custom-class="abow_dialog" :title="dialogTitle" :visible.sync="dialogVisible" width="600px"
+      @closed="handlClose">
+      <div class="el-dialog-div">
+        <el-form :model="form" ref="form" v-if="formType === 0">
+          <el-form-item label="订单编号" :label-width="formLabelWidth">
+            <el-input v-model="form.id" autocomplete="off" placeholder="请输入订单编号"></el-input>
+          </el-form-item>
+          <el-form-item label="车辆" :label-width="formLabelWidth">
+            <el-select v-model="form.carId" placeholder="请选择车辆">
+              <el-option v-for="item in cars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
+                :value="item.id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <el-form :model="orderForm" ref="orderForm" :rules="orderRules" v-if="formType === 1">
+          <el-form-item label="订单编号" :label-width="formLabelWidth" prop="bueCode">
+            <el-input v-model="orderForm.bueCode" autocomplete="off" readonly></el-input>
+          </el-form-item>
+          <el-form-item label="制单人" :label-width="formLabelWidth" prop="careateUser">
+            <el-input v-model="orderForm.careateUser" autocomplete="off" placeholder="请输入制单人"></el-input>
+          </el-form-item>
+          <el-form-item label="出租日期" :label-width="formLabelWidth" prop="rentDate">
+            <el-date-picker v-model="orderForm.rentDate" type="date" placeholder="请选择出租日期时间" value-format="yyyy-MM-dd"
+              @change="handleDateChange">
+            </el-date-picker>
+          </el-form-item>
+          <el-form-item label="租赁单位" :label-width="formLabelWidth" prop="rentOrg">
+            <el-input v-model="orderForm.rentOrg" autocomplete="off" placeholder="请输入租赁单位"></el-input>
+          </el-form-item>
+          <el-form-item label="承建人" :label-width="formLabelWidth" prop="rentUser">
+            <el-input v-model="orderForm.rentUser" autocomplete="off" placeholder="请输入承建人"></el-input>
+          </el-form-item>
+          <el-form-item label="租金" :label-width="formLabelWidth" prop="rentMonery">
+            <el-input v-model.number="orderForm.rentMonery" autocomplete="off" placeholder="请输入租金"></el-input>
+          </el-form-item>
+          <el-form-item label="出租时长" :label-width="formLabelWidth" prop="rentDuration">
+            <el-select v-model="orderForm.rentDuration" placeholder="请选择出租时长">
+              <el-option v-for="item in rentTimes" :key="item.value" :label="item.label" :value="item.value">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="车辆" :label-width="formLabelWidth" prop="carId">
+            <el-select v-model="orderForm.carId" placeholder="请选择车辆" :disabled="selectCarDisable">
+              <el-option v-for="item in cars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
+                :value="item.id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="备注" :label-width="formLabelWidth">
+            <el-input v-model="orderForm.extInfo" autocomplete="off" placeholder="请输入备注"></el-input>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="cancleDialog">取 消</el-button>
+          <el-button type="primary" @click="confirmDialog">确 定</el-button>
+        </div>
+      </div>
+
     </el-dialog>
   </div>
 </template>
@@ -129,6 +133,12 @@ export default {
         bueCode: '',
         rentDate: new Date(),
         carId: '',
+        carName: '',
+        careateUser: '',
+        rentDuration: '',
+        rentMonery: '',
+        rentOrg: '',
+        rentUser: '',
       },
       orderRules: {
         bueCode: [
@@ -175,6 +185,9 @@ export default {
       window.onresize = (event) => {
         this.tableHeight = event.currentTarget.innerHeight - 160
         this.$refs.table.doLayout()
+        if (this.dialogVisible) {
+          document.querySelector('.el-dialog-div').style.maxHeight = '50vh'
+        }
       }
     },
     getCar() {
@@ -211,6 +224,7 @@ export default {
             item.rentDate = getFamateDate(item.rentDate)
             return item
           })
+          Object.freeze(this.tableData)
           this.total = res.data.total
         }
       })
@@ -230,114 +244,11 @@ export default {
       this.selectCarDisable = false
       this.dialogTitle = '车辆租赁单新建'
       this.formType = 1
+
       this.orderForm.bueCode = this.getOrderNo(
         getFamateDate(this.orderForm.rentDate)
       )
       this.cars = this.allCars.filter((item) => item.rentState === '未租赁')
-    },
-    handleDel() {
-      this.$confirm('确认删除?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-        center: true,
-      })
-        .then(() => {
-          let param = {
-            carId: '',
-            pageNum: this.pageNum,
-            pageSize: this.pageSize,
-            rentBeans: this.delArr,
-            rentIds: [],
-            searchText: '',
-          }
-          deleteRent(param).then((res) => {
-            if (res.status === 200) {
-              this.$message({
-                type: 'success',
-                message: '删除成功!',
-              })
-              // this.delArr.forEach(item => {
-              //   this.tableData.forEach((one, index) => {
-              //     if (item.id === one.id) {
-              //       this.tableData.splice(index, 1)
-              //     }
-              //   })
-              // })
-              this.getRent({
-                carCode: '',
-                pageNum: 1,
-                pageSize: this.pageSize,
-                searchText: '',
-              })
-              this.getCar()
-            } else {
-              this.$message({
-                type: 'error',
-                message: '删除失败!',
-              })
-            }
-          })
-        })
-        .catch(() => {
-          this.$message({
-            type: 'info',
-            message: '已取消',
-          })
-        })
-    },
-    handleRowEdit(row) {
-      console.log('row', row)
-      this.dialogTitle = '修改租赁信息'
-      this.dialogVisible = true
-      this.formType = 1
-      this.isAdd = false
-      this.cars = this.allCars
-      this.selectCarDisable = true
-      this.orderForm = row
-    },
-    handleRowDel(value, index) {
-      console.log('value', value)
-      this.$confirm('确认删除？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-        center: true,
-      })
-        .then(() => {
-          let param = {
-            carId: '',
-            pageNum: this.pageNum,
-            pageSize: this.pageSize,
-            rentBeans: [value],
-            rentIds: [],
-            searchText: '',
-          }
-          deleteRent(param).then((res) => {
-            if (res.status === 200) {
-              this.$message({
-                type: 'success',
-                message: '删除成功!',
-              })
-              this.tableData.splice(index, 1)
-              this.total --
-              // this.minusPageNum()
-              // this.getRent()
-              this.getCar()
-            } else {
-              this.$message({
-                type: 'error',
-                message: '删除失败!',
-              })
-            }
-          })
-        })
-        .catch(() => {
-          this.message({
-            type: 'info',
-            message: '已取消',
-          })
-        })
     },
     addRent() {
       this.orderForm.carCode = ''
@@ -361,6 +272,102 @@ export default {
         }
       })
     },
+    handleDel() {
+      this.$confirm('确认删除?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          let param = {
+            carId: '',
+            pageNum: this.pageNum,
+            pageSize: this.pageSize,
+            rentBeans: this.delArr,
+            rentIds: [],
+            searchText: '',
+          }
+          deleteRent(param).then((res) => {
+            if (res.status === 200) {
+              this.$message({
+                type: 'success',
+                message: '删除成功!',
+              })
+              this.getRent({
+                carCode: '',
+                pageNum: 1,
+                pageSize: this.pageSize,
+                searchText: '',
+              })
+              this.getCar()
+              this.$refs.table.doLayout()
+            } else {
+              this.$message({
+                type: 'error',
+                message: '删除失败!',
+              })
+            }
+          })
+        })
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消',
+          })
+        })
+    },
+    handleRowEdit(row) {
+      console.log('row', row)
+      this.dialogTitle = '修改租赁信息'
+      this.dialogVisible = true
+      this.formType = 1
+      this.isAdd = false
+      this.cars = this.allCars
+      this.selectCarDisable = true
+      this.orderForm = { ...row }
+    },
+    handleRowDel(value, index) {
+      console.log('value', value)
+      this.$confirm('确认删除？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          let param = {
+            carId: '',
+            pageNum: this.pageNum,
+            pageSize: this.pageSize,
+            rentBeans: [value],
+            rentIds: [],
+            searchText: '',
+          }
+          deleteRent(param).then((res) => {
+            if (res.status === 200) {
+              this.$message({
+                type: 'success',
+                message: '删除成功!',
+              })
+              // this.minusPageNum()
+              this.getRent()
+              this.getCar()
+              this.$refs.table.doLayout()
+            } else {
+              this.$message({
+                type: 'error',
+                message: '删除失败!',
+              })
+            }
+          })
+        })
+        .catch(() => {
+          this.message({
+            type: 'info',
+            message: '已取消',
+          })
+        })
+    },
+
     updateRent() {
       updateRent(this.orderForm).then((res) => {
         if (res.status === 200) {
@@ -405,7 +412,6 @@ export default {
       }
     },
     clearForm() {
-
       if (!this.isAdd) {
         this.orderForm = {
           id: '',
@@ -414,8 +420,9 @@ export default {
           carId: '',
         }
       }
-
-      this.$refs.orderForm.resetFields()
+      if (this.formType === 1) {
+        this.$refs.orderForm.resetFields()
+      }
     },
     cancleDialog() {
       this.dialogVisible = false
@@ -454,6 +461,15 @@ export default {
       console.log('sss', Math.ceil((this.total + 1) / this.pageSize))
       console.log('sss', this.pageNum)
     },
+    refreshList(pageNum, pageSize) {
+      // if (this.total / (this.pageNum * this.pageSize))
+      this.getRent({
+        carCode: '',
+        pageNum: pageNum,
+        pageSize: pageSize,
+        searchText: '',
+      })
+    },
   },
 }
 </script>
@@ -463,5 +479,12 @@ export default {
   position: fixed;
   bottom: 40px;
   right: 20px;
+}
+.el-dialog-div {
+  max-height: 50vh;
+  overflow: auto;
+}
+.dialog-footer {
+  text-align: center;
 }
 </style>
