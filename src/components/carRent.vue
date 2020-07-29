@@ -33,7 +33,7 @@
       </el-table-column>
     </el-table>
     <el-pagination class="pagination" @size-change="handleSizeChange" @current-change="handleCurrentChange"
-      :current-page.sync="pageNum" :page-sizes="[3,5, 10, 20, 30, 50]" :page-size="pageSize"
+      :current-page="pageNum" :page-sizes="[3,5, 10, 20, 30, 50]" :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper" :total="total">
     </el-pagination>
     <el-dialog custom-class="abow_dialog" :title="dialogTitle" :visible.sync="dialogVisible" width="600px"
@@ -101,7 +101,7 @@
 
 <script>
 import { getRent, updateRent, addRent, deleteRent, getCar } from '../api'
-import { getFamateDate } from '../utils'
+import { getFamateDate, getSingleDelPage, getMultipleDelPage } from '../utils'
 
 export default {
   watch: {
@@ -120,7 +120,7 @@ export default {
     return {
       tableHeight: '',
       pageNum: 1,
-      pageSize: 5,
+      pageSize: 10,
       total: 0,
       delDisabled: true,
       formType: 0,
@@ -224,7 +224,6 @@ export default {
             item.rentDate = getFamateDate(item.rentDate)
             return item
           })
-          Object.freeze(this.tableData)
           this.total = res.data.total
         }
       })
@@ -253,14 +252,30 @@ export default {
     addRent() {
       this.orderForm.carCode = ''
       this.orderForm.carName = ''
+      let _this = this
       addRent(this.orderForm).then((res) => {
         if (res.status === 200) {
           this.$message({
             type: 'success',
             message: '添加成功',
           })
-          // this.getPageNumm()
-          this.getRent()
+          this.pageNum = this.getLastPage()
+          console.log('page1', this.pageNum)
+          getRent({
+            carCode: '',
+            pageNum: _this.pageNum,
+            pageSize: _this.pageSize,
+            searchText: '',
+          }).then((res) => {
+            if (res.status === 200) {
+              this.tableData = res.data.list.map((item) => {
+                item.rentDate = getFamateDate(item.rentDate)
+                return item
+              })
+              console.log('page2', this.pageNum)
+              this.total++
+            }
+          })
           this.getCar()
           this.$refs.orderForm.resetFields()
           this.dialogVisible = false
@@ -293,9 +308,15 @@ export default {
                 type: 'success',
                 message: '删除成功!',
               })
+              this.pageNum = getMultipleDelPage(
+                this.pageNum,
+                this.pageSize,
+                this.total,
+                param.rentBeans.length
+              )
               this.getRent({
                 carCode: '',
-                pageNum: 1,
+                pageNum: this.pageNum,
                 pageSize: this.pageSize,
                 searchText: '',
               })
@@ -322,6 +343,7 @@ export default {
       this.dialogVisible = true
       this.formType = 1
       this.isAdd = false
+
       this.cars = this.allCars
       this.selectCarDisable = true
       this.orderForm = { ...row }
@@ -349,7 +371,17 @@ export default {
                 message: '删除成功!',
               })
               // this.minusPageNum()
-              this.getRent()
+              this.pageNum = getSingleDelPage(
+                this.pageNum,
+                this.pageSize,
+                this.total
+              )
+              this.getRent({
+                carCode: '',
+                pageNum: this.pageNum,
+                pageSize: this.pageSize,
+                searchText: '',
+              })
               this.getCar()
               this.$refs.table.doLayout()
             } else {
@@ -360,8 +392,8 @@ export default {
             }
           })
         })
-        .catch(() => {
-          this.message({
+        .catch((err) => {
+          this.$message({
             type: 'info',
             message: '已取消',
           })
@@ -440,6 +472,7 @@ export default {
     },
     handleCurrentChange(page) {
       this.pageNum = page
+      console.log('page3', this.pageNum)
       this.getRent()
     },
     getOrderNo(value) {
@@ -451,15 +484,20 @@ export default {
     handlClose() {
       this.clearForm()
     },
-    // minusPageNum() {
-    //   if (this.total - this.pageSize * this.pageNum === 1) {
-    //     this.pageNum--
-    //   }
-    // },
-    getPageNumm() {
-      this.pageNum = Math.ceil((this.total + 1) / this.pageSize)
-      console.log('sss', Math.ceil((this.total + 1) / this.pageSize))
-      console.log('sss', this.pageNum)
+
+    getLastPage() {
+      let num = 0
+      if (this.total >= this.pageSize) {
+        num = this.total / this.pageSize
+        if (num === Math.ceil(num)) {
+          num = Math.ceil(num) + 1
+        } else {
+          num = Math.ceil(num)
+        }
+      } else {
+        num = this.pageNum
+      }
+      return num
     },
     refreshList(pageNum, pageSize) {
       // if (this.total / (this.pageNum * this.pageSize))
