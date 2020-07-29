@@ -3,7 +3,7 @@
     <el-container>
       <el-aside class="left">
         <el-tree :props="props" :load="loadNode" lazy ref="tree" node-key="id" highlight-current
-          :default-expanded-keys="['00000000-0000-0000-0000-000000000000']" @node-click="handleNodeClick">
+          :default-expanded-keys="defaultExpandedKeys" @node-click="handleNodeClick">
         </el-tree>
       </el-aside>
       <el-main>
@@ -43,9 +43,9 @@
             </template>
           </el-table-column>
         </el-table>
-        <el-pagination class="pagination" @size-change="handleSizeChange" @current-change="handleCurrentChange"
-          :current-page="pageNum" :page-sizes="[5, 10, 20, 30, 50]" :page-size="pageSize"
-          layout="total, sizes, prev, pager, next, jumper" :total="total">
+        <el-pagination v-if="pageShow" class="pagination" @size-change="handleSizeChange"
+          @current-change="handleCurrentChange" :current-page.sync="pageNum" :page-sizes="[5, 10, 20, 30, 50]"
+          :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="total">
         </el-pagination>
       </el-main>
     </el-container>
@@ -131,24 +131,43 @@ export default {
     },
     nodeObj: {
       handler(node) {
-        console.log('watchnode', node)
-        this.getCarByType(node.id).then((res) => {
-          if (
-            node.id === '00000000-0000-0000-0000-000000000000' ||
-            node.id === undefined
-          ) {
-            this.editCarTypeDisable = true
-            this.delCarTypeDisable = true
-          } else {
-            if (node.isleaf === 0) {
-              this.editCarTypeDisable = false
-              this.delCarTypeDisable = this.isRended(this.tableData)
-            } else {
+        Promise.all([this.getCarByType(node.id), getCarType(node)]).then(
+          (res) => {
+            let childrenNum = res[1].data.data.length
+            if (
+              node.id === '00000000-0000-0000-0000-000000000000' ||
+              node.id === undefined
+            ) {
+              this.editCarTypeDisable = true
               this.delCarTypeDisable = true
-              this.editCarTypeDisable = false
+            } else {
+              if (childrenNum === 0) {
+                this.editCarTypeDisable = false
+                this.delCarTypeDisable = this.isRended(this.tableData)
+              } else {
+                this.delCarTypeDisable = true
+                this.editCarTypeDisable = false
+              }
             }
           }
-        })
+        )
+        // this.getCarByType(node.id).then((res) => {
+        //   if (
+        //     node.id === '00000000-0000-0000-0000-000000000000' ||
+        //     node.id === undefined
+        //   ) {
+        //     this.editCarTypeDisable = true
+        //     this.delCarTypeDisable = true
+        //   } else {
+        //     if (node.isleaf === 0) {
+        //       this.editCarTypeDisable = false
+        //       this.delCarTypeDisable = this.isRended(this.tableData)
+        //     } else {
+        //       this.delCarTypeDisable = true
+        //       this.editCarTypeDisable = false
+        //     }
+        //   }
+        // })
       },
       deep: true,
     },
@@ -157,8 +176,13 @@ export default {
     this.getTableHeight()
     this.getCar()
   },
+  mounted() {
+    console.log('ttttttt', this.$refs.tree)
+  },
   data() {
     return {
+      pageShow: true,
+      defaultExpandedKeys: ['00000000-0000-0000-0000-000000000000'],
       tableHeight: '',
       pageSize: 10,
       pageNum: 1,
@@ -404,12 +428,30 @@ export default {
       }, 500)
     },
     addFocusNode(id, parentId, node) {
-      // this.$refs.tree.append(res.data.data, res.data.data.carTypeParent)
       let tree = this.$refs.tree
-      tree.append(node, parentId)
-      tree.getNode(parentId).loaded = false
-      tree.getNode(parentId).expand()
-      this.focusNode(id)
+      // tree.getNode(parentId).loaded = false
+      // tree.getNode(parentId).expand()
+      // tree.append(node, parentId)
+      // this.focusNode(id)
+      getParentCarType({
+        id,
+        carTypeName: '',
+        carTypeCode: '',
+        carTypeParent: parentId,
+      }).then((res) => {
+        if (res.status === 200) {
+          console.log('res', res)
+          let data = res.data.data
+          tree.append(node, parentId)
+          this.focusNode(id)
+          this.defaultExpandedKeys = data
+          // console.log('ttttt', this.$refs.tree)
+          // data.forEach((item) => {
+          // tree.getNode(item).expanded = true
+          //   tree.getNode(parentId).loaded = false
+          // })
+        }
+      })
     },
     addCarType() {
       let param = {
@@ -516,6 +558,11 @@ export default {
             searchText: '',
           }).then((res) => {
             if (res.status === 200) {
+              this.pageShow = false
+              this.$nextTick(() => {
+                this.pageShow = true
+              })
+
               this.tableData = res.data.list.map((item) => {
                 item.carBuyTime = getFamateDate(item.carBuyTime)
                 return item
@@ -601,7 +648,8 @@ export default {
             message: '修改成功',
           })
           this.getCar({
-            cartypeId: this.nodeObj.id || '00000000-0000-0000-0000-000000000000',
+            cartypeId:
+              this.nodeObj.id || '00000000-0000-0000-0000-000000000000',
             pageNum: this.pageNum,
             pageSize: this.pageSize,
             searchText: '',

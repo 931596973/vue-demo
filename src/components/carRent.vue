@@ -32,9 +32,9 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination class="pagination" @size-change="handleSizeChange" @current-change="handleCurrentChange"
-      :current-page="pageNum" :page-sizes="[3,5, 10, 20, 30, 50]" :page-size="pageSize"
-      layout="total, sizes, prev, pager, next, jumper" :total="total">
+    <el-pagination v-if="pageShow" class="pagination" @size-change="handleSizeChange"
+      @current-change="handleCurrentChange" :current-page.sync="pageNum" :page-sizes="[3,5, 10, 20, 30, 50]"
+      :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="total">
     </el-pagination>
     <el-dialog custom-class="abow_dialog" :title="dialogTitle" :visible.sync="dialogVisible" width="600px"
       @closed="handlClose">
@@ -118,6 +118,7 @@ export default {
   },
   data() {
     return {
+      pageShow: true,
       tableHeight: '',
       pageNum: 1,
       pageSize: 10,
@@ -268,6 +269,12 @@ export default {
             searchText: '',
           }).then((res) => {
             if (res.status === 200) {
+
+              this.pageShow = false
+              this.$nextTick(() => {
+                this.pageShow = true
+              })
+              
               this.tableData = res.data.list.map((item) => {
                 item.rentDate = getFamateDate(item.rentDate)
                 return item
