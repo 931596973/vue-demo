@@ -50,8 +50,8 @@
       </el-main>
     </el-container>
 
-    <el-dialog custom-class="abow_dialog" :title="dialogTitle" :visible.sync="dialogVisible" width="600px"
-      @close="cancleDialog">
+    <el-dialog custom-class="abow_dialog" :title="dialogTitle" destroy-on-close :visible.sync="dialogVisible"
+      width="600px" @close="cancleDialog">
       <div class="el-dialog-div">
         <el-form :model="form" :rules="rules" ref="form" v-if="formType === 0">
           <el-form-item label="类型编码" :label-width="formLabelWidth" prop="carTypeCode">
@@ -62,7 +62,7 @@
           </el-form-item>
           <el-form-item label="上级类型" :label-width="formLabelWidth" prop="carTypeParent">
             <treeselect v-model="form.carTypeParent" ref="treeSelect" :options="options" valueFormat="node"
-              :load-options="loadOptions" @select="handleTreeSelected" />
+              :appendToBody="true" :load-options="loadOptions" @select="handleTreeSelected" />
           </el-form-item>
         </el-form>
         <el-form :model="carForm" :rules="carRules" ref="carForm" v-if="formType === 1">
@@ -89,14 +89,15 @@
             </el-radio-group>
           </el-form-item>
           <el-form-item label="车辆类型" :label-width="formLabelWidth" prop="careType">
-            <treeselect v-model="carForm.careType" :options="options" valueFormat="node" :load-options="loadOptions"
-              @select="handleTreeSelected" />
+            <treeselect style="z-index:9999 !important" v-model="carForm.careType" :options="options" valueFormat="node"
+              :load-options="loadOptions" :appendToBody="true" @select="handleTreeSelected" />
           </el-form-item>
         </el-form>
-        <div slot="footer" class="dialog-footer">
-          <el-button @click="cancleDialog">取 消</el-button>
-          <el-button type="primary" @click="confirmDialog">确 定</el-button>
-        </div>
+
+      </div>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancleDialog">取 消</el-button>
+        <el-button type="primary" @click="confirmDialog">确 定</el-button>
       </div>
 
     </el-dialog>
@@ -176,9 +177,6 @@ export default {
     this.getTableHeight()
     this.getCar()
   },
-  mounted() {
-    console.log('ttttttt', this.$refs.tree)
-  },
   data() {
     return {
       pageShow: true,
@@ -190,7 +188,7 @@ export default {
       props: {
         label: 'carTypeName',
         children: 'zones',
-        isLeaf: 'leaf',
+        isLeaf: 'isleaf',
       },
       radio: '未租赁',
       editCarDisable: true,
@@ -275,6 +273,7 @@ export default {
       selection: [],
       treeParentId: '',
       carTypeObj: {},
+      carFormTmp: {},
     }
   },
   methods: {
@@ -283,7 +282,9 @@ export default {
       window.onresize = (event) => {
         this.tableHeight = event.currentTarget.innerHeight - 237 + 'px'
         if (this.dialogVisible) {
-          document.querySelector('.el-dialog-div').style.maxHeight = '50vh'
+          // document.querySelector('.el-dialog-div').style.maxHeight = '50vh'
+          document.querySelector('.el-dialog').style.maxHeight = (window.innerHeight - 150) + 'px'
+
         }
       }
     },
@@ -525,6 +526,23 @@ export default {
       this.formType = 1
       this.isAdd = true
 
+      // let obj = {
+      //   id: this.nodeObj.id || '00000000-0000-0000-0000-000000000000',
+      //   label: this.nodeObj.carTypeName || '00 车辆品牌'
+      // }
+
+      // this.carForm = {
+      //   rentState: '未租赁',
+      //   carBuyMonery: '',
+      //   carBuyTime: '',
+      //   carCode: '',
+      //   carName: '',
+      //   carNumber: '',
+      // }
+      // this.carForm.careType = obj
+
+      // this.$nextTick(() => this.$refs.carForm.resetFields())
+
       this.focusCarType()
     },
     addCar() {
@@ -550,6 +568,8 @@ export default {
           this.$refs.carForm.resetFields()
 
           this.pageNum = this.getLastPage()
+          this.pageShow = false
+
           getCar({
             cartypeId:
               this.nodeObj.id || '00000000-0000-0000-0000-000000000000',
@@ -558,7 +578,6 @@ export default {
             searchText: '',
           }).then((res) => {
             if (res.status === 200) {
-              this.pageShow = false
               this.$nextTick(() => {
                 this.pageShow = true
               })
@@ -611,6 +630,7 @@ export default {
       this.isAdd = false
       this.dialogVisible = true
 
+      this.beforeUpdateCar(this.carFormTmp)
       // let obj = {
       //   carCode: this.updateCarObj.carCode,
       //   carName: this.updateCarObj.carName,
@@ -706,10 +726,12 @@ export default {
       this.delParam.carBeans = selection
 
       // this.updateCarObj = { ...row }
-      this.beforeUpdateCar(row)
+      this.carFormTmp = { ...row }
+      // this.beforeUpdateCar(row)
     },
     selectAll(selection) {
       this.delParam.carBeans = selection
+      this.selection = selection
     },
     cancleDialog() {
       this.dialogVisible = false
@@ -840,14 +862,32 @@ export default {
         data.id = data.carTypeParent
         getCarType(data).then((res) => {
           if (res.data.status === 200) {
-            return resolve(res.data.data)
+            return resolve(
+              res.data.data.map((item) => {
+                if (item.isleaf === 0) {
+                  item.isleaf = true
+                } else {
+                  item.isleaf = false
+                }
+                return item
+              })
+            )
           }
         })
       }
       if (node.level > 1) {
         getCarType(data).then((res) => {
           if (res.data.status === 200) {
-            return resolve(res.data.data)
+            return resolve(
+              res.data.data.map((item) => {
+                if (item.isleaf === 0) {
+                  item.isleaf = true
+                } else {
+                  item.isleaf = false
+                }
+                return item
+              })
+            )
           }
         })
       }
@@ -981,11 +1021,24 @@ export default {
   bottom: 40px;
   right: 20px;
 }
+.abow_dialog {
+  height: 500px !important;
+}
 .el-dialog-div {
   max-height: 50vh;
+  /* max-height: calc(100% - 15vh); */
   overflow: auto;
 }
 .dialog-footer {
-  text-align: center;
+  /* float: right; */
+}
+</style>
+<style>
+.vue-treeselect {
+  z-index: 9999 !important;
+}
+.el-dialog {
+  max-height: calc(100 - 150px);
+  overflow: hidden;
 }
 </style>

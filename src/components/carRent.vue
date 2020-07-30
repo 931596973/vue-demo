@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="height:100%">
     <div class="btn-wrap">
       <el-button type="primary" size="small" @click="handleQuery">查询</el-button>
       <el-button type="primary" size="small" @click="handleAdd">新建</el-button>
@@ -36,15 +36,15 @@
       @current-change="handleCurrentChange" :current-page.sync="pageNum" :page-sizes="[3,5, 10, 20, 30, 50]"
       :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="total">
     </el-pagination>
-    <el-dialog custom-class="abow_dialog" :title="dialogTitle" :visible.sync="dialogVisible" width="600px"
-      @closed="handlClose">
+    <el-dialog custom-class="abow_dialog" :title="dialogTitle" destroy-on-close :visible.sync="dialogVisible"
+      width="600px" @closed="handlClose">
       <div class="el-dialog-div">
         <el-form :model="form" ref="form" v-if="formType === 0">
           <el-form-item label="订单编号" :label-width="formLabelWidth">
             <el-input v-model="form.id" autocomplete="off" placeholder="请输入订单编号"></el-input>
           </el-form-item>
           <el-form-item label="车辆" :label-width="formLabelWidth">
-            <el-select v-model="form.carId" placeholder="请选择车辆">
+            <el-select v-model="form.carId" placeholder="请选择车辆" clearable>
               <el-option v-for="item in cars" :key="item.id" :label="item.careTypeName + '-' + item.carName"
                 :value="item.id">
               </el-option>
@@ -66,7 +66,7 @@
           <el-form-item label="租赁单位" :label-width="formLabelWidth" prop="rentOrg">
             <el-input v-model="orderForm.rentOrg" autocomplete="off" placeholder="请输入租赁单位"></el-input>
           </el-form-item>
-          <el-form-item label="承建人" :label-width="formLabelWidth" prop="rentUser">
+          <el-form-item label="承租人" :label-width="formLabelWidth" prop="rentUser">
             <el-input v-model="orderForm.rentUser" autocomplete="off" placeholder="请输入承建人"></el-input>
           </el-form-item>
           <el-form-item label="租金" :label-width="formLabelWidth" prop="rentMonery">
@@ -89,10 +89,10 @@
             <el-input v-model="orderForm.extInfo" autocomplete="off" placeholder="请输入备注"></el-input>
           </el-form-item>
         </el-form>
-        <div slot="footer" class="dialog-footer">
-          <el-button @click="cancleDialog">取 消</el-button>
-          <el-button type="primary" @click="confirmDialog">确 定</el-button>
-        </div>
+      </div>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancleDialog">取 消</el-button>
+        <el-button type="primary" @click="confirmDialog">确 定</el-button>
       </div>
 
     </el-dialog>
@@ -118,6 +118,7 @@ export default {
   },
   data() {
     return {
+      totalCar: 999,
       pageShow: true,
       tableHeight: '',
       pageNum: 1,
@@ -187,7 +188,9 @@ export default {
         this.tableHeight = event.currentTarget.innerHeight - 160
         this.$refs.table.doLayout()
         if (this.dialogVisible) {
-          document.querySelector('.el-dialog-div').style.maxHeight = '50vh'
+          // document.querySelector('.el-dialog-div').style.maxHeight = '50vh'
+          document.querySelector('.el-dialog').style.maxHeight =
+            window.innerHeight - 150 + 'px'
         }
       }
     },
@@ -195,12 +198,13 @@ export default {
       let param = {
         cartypeId: '00000000-0000-0000-0000-000000000000',
         pageNum: 1,
-        pageSize: 999,
+        pageSize: this.totalCar,
         searchText: '',
       }
       getCar(param).then((res) => {
         if (res.status === 200) {
           this.allCars = res.data.list
+          this.totalCar = res.data.total
           this.cars = this.allCars
         }
       })
@@ -262,6 +266,8 @@ export default {
           })
           this.pageNum = this.getLastPage()
           console.log('page1', this.pageNum)
+          this.pageShow = false
+
           getRent({
             carCode: '',
             pageNum: _this.pageNum,
@@ -269,18 +275,15 @@ export default {
             searchText: '',
           }).then((res) => {
             if (res.status === 200) {
-
-              this.pageShow = false
-              this.$nextTick(() => {
-                this.pageShow = true
-              })
-              
               this.tableData = res.data.list.map((item) => {
                 item.rentDate = getFamateDate(item.rentDate)
                 return item
               })
               console.log('page2', this.pageNum)
               this.total++
+              this.$nextTick(() => {
+                this.pageShow = true
+              })
             }
           })
           this.getCar()
@@ -452,12 +455,13 @@ export default {
     },
     clearForm() {
       if (!this.isAdd) {
-        this.orderForm = {
+        let obj = {
           id: '',
           bueCode: '',
           rentDate: new Date(),
           carId: '',
         }
+        this.orderForm = obj
       }
       if (this.formType === 1) {
         this.$refs.orderForm.resetFields()
@@ -527,9 +531,10 @@ export default {
 }
 .el-dialog-div {
   max-height: 50vh;
+  /* max-height: calc(100% - 500px); */
   overflow: auto;
 }
 .dialog-footer {
-  text-align: center;
+  /* float: right; */
 }
 </style>
