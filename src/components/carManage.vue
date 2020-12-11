@@ -2,9 +2,9 @@
   <div style="height:100%;overflow:hidden">
     <el-container>
       <el-aside class="left">
-        <el-tree :props="props" :load="loadNode" lazy ref="tree" node-key="id" highlight-current
+        <!-- <el-tree :props="props" :load="loadNode" lazy ref="tree" node-key="id" highlight-current
           :default-expanded-keys="defaultExpandedKeys" @node-click="handleNodeClick">
-        </el-tree>
+        </el-tree> -->
       </el-aside>
       <el-main>
         <h3>车辆管理</h3>
@@ -18,11 +18,14 @@
           <el-button type="primary" size="small" :disabled="editCarDisable" @click="handleUpdateCar">修改车辆</el-button>
           <el-button type="primary" size="small" :disabled="delCarDisable" @click="handleDelCar">删除车辆</el-button>
         </div>
-        <el-table :data="tableData" tooltip-effect="dark" style="width: 100%" :height="tableHeight" @select="selectRow"
+        <el-table :data="tableData" tooltip-effect="dark" style="width: 100%"  @select="selectRow"
           @select-all="selectAll">
           <el-table-column type="selection" width="55">
           </el-table-column>
-          <el-table-column prop="carCode" label="车辆编码">
+          <el-table-column  label="车辆编码">
+            <template v-slot="scope">
+              <template>{{scope.row.carCode}}</template>
+            </template>
           </el-table-column>
           <el-table-column prop="carName" label="名称">
           </el-table-column>
@@ -131,51 +134,34 @@ export default {
       this.isEditCarDisable(selection)
     },
     nodeObj: {
-      handler(node) {
-        Promise.all([this.getCarByType(node.id), getCarType(node)]).then(
-          (res) => {
-            let childrenNum = res[1].data.data.length
-            if (
-              node.id === '00000000-0000-0000-0000-000000000000' ||
-              node.id === undefined
-            ) {
-              this.editCarTypeDisable = true
-              this.delCarTypeDisable = true
-            } else {
-              if (childrenNum === 0) {
-                this.editCarTypeDisable = false
-                this.delCarTypeDisable = this.isRended(this.tableData)
-              } else {
-                this.delCarTypeDisable = true
-                this.editCarTypeDisable = false
-              }
-            }
-          }
-        )
-        // this.getCarByType(node.id).then((res) => {
-        //   if (
-        //     node.id === '00000000-0000-0000-0000-000000000000' ||
-        //     node.id === undefined
-        //   ) {
-        //     this.editCarTypeDisable = true
-        //     this.delCarTypeDisable = true
-        //   } else {
-        //     if (node.isleaf === 0) {
-        //       this.editCarTypeDisable = false
-        //       this.delCarTypeDisable = this.isRended(this.tableData)
-        //     } else {
-        //       this.delCarTypeDisable = true
-        //       this.editCarTypeDisable = false
-        //     }
-        //   }
-        // })
-      },
-      deep: true,
+      // handler(node) {
+      //   Promise.all([this.getCarByType(node.id), getCarType(node)]).then(
+      //     (res) => {
+      //       let childrenNum = res[1].data.data.length
+      //       if (
+      //         node.id === '00000000-0000-0000-0000-000000000000' ||
+      //         node.id === undefined
+      //       ) {
+      //         this.editCarTypeDisable = true
+      //         this.delCarTypeDisable = true
+      //       } else {
+      //         if (childrenNum === 0) {
+      //           this.editCarTypeDisable = false
+      //           this.delCarTypeDisable = this.isRended(this.tableData)
+      //         } else {
+      //           this.delCarTypeDisable = true
+      //           this.editCarTypeDisable = false
+      //         }
+      //       }
+      //     }
+      //   )
+      // },
+      // deep: true,
     },
   },
   created() {
-    this.getTableHeight()
-    this.getCar()
+    // this.getTableHeight()
+    // this.getCar()
   },
   data() {
     return {
@@ -257,7 +243,9 @@ export default {
         carName: '',
         carNumber: '',
       },
-      tableData: [],
+      tableData: [{
+        carCode:'lkasjdflkjsdlfjsldkfjskldfjslakdfjlsdaaadddddddddddddddddadddddddddddddddadadadadadadadadadadadadadadadaddsadjflkasdfjlkasdfj哈萨克倒海翻江阿萨德阿斯顿发生懒得发斯蒂芬垃圾'
+      }],
       dialogTitle: '新增车辆类型',
       dialogVisible: false,
       nodeObj: {},
@@ -1029,9 +1017,7 @@ export default {
   /* max-height: calc(100% - 15vh); */
   overflow: auto;
 }
-.dialog-footer {
-  /* float: right; */
-}
+
 </style>
 <style>
 .vue-treeselect {

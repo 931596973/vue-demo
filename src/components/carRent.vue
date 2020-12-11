@@ -113,8 +113,8 @@ export default {
   },
   created() {
     this.getTableHeight()
-    this.getCar()
-    this.getRent()
+    // this.getCar()
+    // this.getRent()
   },
   data() {
     return {
@@ -167,7 +167,9 @@ export default {
           { type: 'number', message: '请输入数字', trigger: 'change' },
         ],
       },
-      tableData: [],
+      tableData: [{
+        
+      }],
       dialogTitle: '',
       dialogVisible: false,
       formLabelWidth: '120px',
@@ -533,8 +535,5 @@ export default {
   max-height: 50vh;
   /* max-height: calc(100% - 500px); */
   overflow: auto;
-}
-.dialog-footer {
-  /* float: right; */
 }
 </style>

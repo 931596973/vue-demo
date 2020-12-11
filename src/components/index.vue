@@ -6,6 +6,9 @@
     <div>
       <router-link to='/rent'>租赁管理</router-link>
     </div>
+    <div>
+      <router-link to='/basedata'>basedata</router-link>
+    </div>
   </div>
 </template>
 
